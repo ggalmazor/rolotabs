@@ -7,6 +7,32 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.3.0] — 2026-02-11
+
+### Changed
+- **Pinned favicon size:** Zone 1 icons enlarged to 32×32px (from 16×16)
+  with wider grid cells (40px) for better visibility.
+- **Danger drop ghost at top:** When dragging an inactive bookmark to zone 3,
+  the 🗑 delete indicator now appears at the top of the zone.
+- **Empty-state text hides during drag:** "Drag tabs here to pin/bookmark"
+  placeholders fully disappear (text + space) when dragging, replaced by
+  the ghost drop indicator only.
+- **Removed zone 2 bottom padding** (was 30px).
+
+### Added
+- **Ghost drop indicators:** All drag-and-drop interactions now show contextual
+  ghost elements instead of highlight-based feedback.
+- **Unbookmark ghost:** Dragging an active bookmarked tab from zone 2 to
+  zone 3 shows a blue 📂✕ ghost (distinct from the red 🗑 for deletions).
+- **Zone-specific drag-over highlights** with differentiated colors and
+  opacity per context.
+- **Phase 2 drag-and-drop reordering** within zones.
+
+### Fixed
+- Drop indicator stacking from re-render.
+- Zone 3 intercepting drags from its own items.
+- Drag breaking when empty-state elements were hidden (min-height fallback).
+
 ## [0.2.0] — 2026-02-11
 
 ### Changed
