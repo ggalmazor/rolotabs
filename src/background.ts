@@ -124,11 +124,12 @@ async function addTabToGroup(
     if (groupId === -1) {
       // Create new group with this tab
       groupId = await chrome.tabs.group({ tabIds: [tabId] });
-      await chrome.tabGroups.update(groupId, { title: label, color, collapsed: false });
     } else {
       // Add tab to existing group
       await chrome.tabs.group({ tabIds: [tabId], groupId });
     }
+    // Always (re-)apply title and color
+    await chrome.tabGroups.update(groupId, { title: label, color, collapsed: false });
 
     if (zone === "pinned") {
       pinnedGroupId = groupId;
@@ -202,8 +203,19 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   if (tab.url || tab.pendingUrl) {
     await tryAssociateTab(tab);
   }
-  // Ungroup tabs that inherited a managed group but aren't bookmarked
-  await ungroupIfNotBookmarked(tab);
+  // Ungroup tabs that inherited a managed group but aren't bookmarked.
+  // Delay to let Chrome assign the inherited groupId.
+  if (tab.id) {
+    const tabId = tab.id;
+    setTimeout(async () => {
+      try {
+        const fresh = await chrome.tabs.get(tabId);
+        await ungroupIfNotBookmarked(fresh);
+      } catch {
+        // tab may have been closed
+      }
+    }, 500);
+  }
   await notifySidePanel();
 });
 
@@ -215,10 +227,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       tabToBookmark.delete(tabId);
     }
     await tryAssociateTab(tab);
-  }
-  // Chrome assigns groupId asynchronously after tab creation
-  if (changeInfo.groupId !== undefined) {
-    await ungroupIfNotBookmarked(tab);
   }
   if (changeInfo.status === "complete" || changeInfo.title) {
     await notifySidePanel();
