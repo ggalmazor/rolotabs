@@ -64,7 +64,7 @@ body {
 }
 
 #zone-tabs .tabs-list {
-  padding-bottom: 80px;
+  padding-bottom: 30px;
 }
 
 .zone-unlinked {
@@ -135,8 +135,8 @@ body {
 }
 
 .pinned-item .favicon {
-  width: 20px;
-  height: 20px;
+  width: 10px;
+  height: 10px;
   border-radius: 4px;
   opacity: 0.6;
   transition: opacity var(--transition);
