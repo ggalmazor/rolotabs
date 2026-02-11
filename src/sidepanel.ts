@@ -75,6 +75,8 @@ chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
 
 async function refreshState(): Promise<void> {
   state = await sendMessage({ type: "getState" }) as PanelState;
+  // Don't re-render while an edit-in-place input is active
+  if (document.querySelector(".edit-in-place")) return;
   if (state) render();
 }
 
@@ -638,34 +640,35 @@ function editInPlace(
   input.className = "edit-in-place";
   input.value = currentValue;
 
-  const original = el.textContent;
   el.textContent = "";
   el.appendChild(input);
   input.focus();
   input.select();
 
-  let saved = false;
-  const save = () => {
-    if (saved) return;
-    saved = true;
+  let done = false;
+  const finish = (commit: boolean) => {
+    if (done) return;
+    done = true;
+    // Remove input first so refreshState sees no active edit
+    input.remove();
     const val = input.value.trim();
-    if (val && val !== currentValue) {
+    if (commit && val && val !== currentValue) {
+      el.textContent = val;
       onSave(val);
     } else {
-      el.textContent = original;
+      el.textContent = currentValue;
     }
   };
 
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      save();
+      finish(true);
     } else if (e.key === "Escape") {
-      saved = true;
-      el.textContent = original;
+      finish(false);
     }
   });
-  input.addEventListener("blur", save);
+  input.addEventListener("blur", () => finish(true));
 }
 
 function toggleFolder(folderId: string): void {
