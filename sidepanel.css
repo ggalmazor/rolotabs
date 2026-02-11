@@ -96,10 +96,10 @@ body.is-dragging:not(.is-dragging-from-zone3) .zone-unlinked .zone-drop-hint {
   font-size: 20px;
 }
 
-/* Zone 1/2 drag-over: subtle highlight */
+/* Zone 1/2 drag-over highlight */
 #pinned-grid.drag-over,
 #tabs-list.drag-over {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: var(--radius);
 }
 
