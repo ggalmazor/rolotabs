@@ -65,6 +65,10 @@ After changes, reload the extension at `chrome://extensions/` and reopen the sid
 - [x] **Phase 4:** Tab grouping with auto-positioning and child tab ungrouping
 - [ ] **Phase 5:** Polish — animations, theme support, onboarding
 
+## Credits
+
+Icon: [rolodex](https://thenounproject.com/browse/icons/term/rolodex/) by M2n from [Noun Project](https://thenounproject.com/browse/icons/term/rolodex/) (CC BY 3.0)
+
 ## License
 
 MIT
