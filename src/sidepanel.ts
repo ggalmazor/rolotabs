@@ -33,7 +33,7 @@ async function init(): Promise<void> {
       const bmId = target.dataset?.bookmarkId;
       const isLoaded = target.classList.contains("is-loaded");
       if (bmId && !isLoaded) {
-        hint.textContent = "Drop to remove bookmark";
+        hint.textContent = "🗑";
       } else {
         hint.textContent = "";
       }
