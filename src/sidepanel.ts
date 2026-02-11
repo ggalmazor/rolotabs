@@ -290,6 +290,10 @@ function renderOpenTabs(openTabs: OpenTab[]): void {
   list.innerHTML = "";
 
   section.classList.toggle("is-empty", openTabs.length === 0);
+
+  // Always set up drop zone (even when empty, for unbookmark drops)
+  setupUnbookmarkDropZone(section);
+
   if (openTabs.length === 0) return;
 
   for (const tab of openTabs) {
@@ -339,9 +343,6 @@ function renderOpenTabs(openTabs: OpenTab[]): void {
 
     list.appendChild(el);
   }
-
-  // Zone 3 is a drop target: dropping a bookmark here removes it
-  setupUnbookmarkDropZone(section);
 }
 
 function setupUnbookmarkDropZone(element: HTMLElement): void {

@@ -38,7 +38,7 @@ export function showDropIndicator(container: HTMLElement, y: number): number {
     }
   }
 
-  // Position the indicator
+  // Position the indicator — horizontal line
   const containerRect = container.getBoundingClientRect();
   let indicatorY: number;
   if (insertIndex < children.length) {
@@ -52,6 +52,7 @@ export function showDropIndicator(container: HTMLElement, y: number): number {
   ind.style.left = `${containerRect.left}px`;
   ind.style.width = `${containerRect.width}px`;
   ind.style.top = `${indicatorY - 1}px`;
+  ind.style.height = "2px";
 
   return insertIndex;
 }
@@ -109,5 +110,7 @@ export function showGridDropIndicator(container: HTMLElement, x: number, y: numb
 export function hideDropIndicator(): void {
   if (indicator) {
     indicator.style.display = "none";
+    indicator.style.height = "2px";
+    indicator.style.width = "";
   }
 }
