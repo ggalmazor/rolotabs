@@ -7,6 +7,41 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.2.0] — 2026-02-11
+
+### Changed
+- **Full bookmark tree:** Zone 2 now shows the browser's entire bookmark
+  hierarchy instead of a special `Rolotabs/` folder. The extension works
+  with bookmarks as-is.
+- **Pinned state decoupled from folders:** Zone 1 pinned status is tracked
+  in `chrome.storage.local` as an ordered list of bookmark IDs. Pinning
+  moves the bookmark to the root (Other Bookmarks) folder.
+- **Zone 3 label** changed from "Today" to "Open Tabs".
+
+### Added
+- **Tab groups:** Tabs opened via Rolotabs are auto-grouped in Chrome's
+  tab strip — `📌 Pinned` (blue, leftmost) and `📚 Bookmarks` (grey, second).
+  Groups reposition automatically and follow pin/unpin/unbookmark actions.
+- **Folder management:** Create, rename, and delete bookmark folders via
+  context menus (right-click folder headers or empty space in zone 2).
+- **Drag and drop within zone 2:** Move bookmarks between folders by
+  dragging onto folder headers.
+- **Unbookmark via drag:** Drag a bookmark from zone 1/2 to zone 3 to
+  remove the bookmark, keep the tab open, and ungroup it.
+- **Custom context menus:** Floating dark-themed menus replace `prompt()`
+  dialogs. Icons, separators, danger-styled destructive actions. Dismiss
+  on click-outside or Escape.
+- **Zone 3 drop target visibility:** "Drop here to unbookmark" appears
+  during drag even when zone 3 is empty.
+- **Empty state placeholder** in zone 2 for drag targeting.
+
+### Fixed
+- Duplicate drop events from stacking event listeners on re-render.
+- Promoted tab association lost by async `onCreated` listener race.
+- Zone 3 visibility toggle (classList vs inline style).
+- `annotateNode` marking unloaded bookmarks as active when `activeTabId`
+  was null.
+
 ## [0.1.0] — 2026-02-11
 
 First working release.
