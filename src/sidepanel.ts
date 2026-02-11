@@ -137,6 +137,27 @@ function renderBookmarks(roots: AnnotatedBookmark[]): void {
     list.innerHTML = '<div class="empty-state">Drag tabs here to bookmark</div>';
   }
 
+  // Context menu on empty space — only set up once
+  if (!list.dataset.contextMenuSet) {
+    list.dataset.contextMenuSet = "true";
+    list.addEventListener("contextmenu", (e) => {
+      if ((e.target as HTMLElement).closest(".tab-item, .folder-header")) return;
+      e.preventDefault();
+      showContextMenu(e.clientX, e.clientY, [
+        {
+          label: "New folder",
+          icon: "📁",
+          action: () => {
+            const name = prompt("Folder name:");
+            if (name && state?.rootFolderId) {
+              sendMessage({ type: "createFolder", parentId: state.rootFolderId, title: name }).then(() => refreshState());
+            }
+          },
+        },
+      ]);
+    });
+  }
+
   setupDropZone(list, "bookmarks");
 }
 
