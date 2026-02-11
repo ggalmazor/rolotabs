@@ -134,8 +134,33 @@ async function addTabToGroup(
     } else {
       bookmarkedGroupId = groupId;
     }
+
+    // Position groups: pinned leftmost, bookmarked second
+    await positionGroups();
   } catch {
     // Grouping failed (e.g. tab already closed) — not critical
+  }
+}
+
+async function positionGroups(): Promise<void> {
+  try {
+    if (pinnedGroupId !== null) {
+      try {
+        await chrome.tabGroups.move(pinnedGroupId, { index: 0 });
+      } catch {
+        pinnedGroupId = null;
+      }
+    }
+    if (bookmarkedGroupId !== null) {
+      try {
+        const targetIndex = pinnedGroupId !== null ? 1 : 0;
+        await chrome.tabGroups.move(bookmarkedGroupId, { index: targetIndex });
+      } catch {
+        bookmarkedGroupId = null;
+      }
+    }
+  } catch {
+    // Not critical
   }
 }
 
