@@ -466,6 +466,7 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
         } catch {
           // Tab may not be in a group
         }
+        await positionGroups();
       }
       // Remove from pinned if needed
       const pinnedIdx = pinnedIds.indexOf(bookmarkId);
