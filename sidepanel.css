@@ -181,6 +181,14 @@ body.is-dragging .zone-unlinked.is-empty .zone-header {
   font-size: 11px;
 }
 
+body.is-dragging .pinned-grid-empty {
+  display: none;
+}
+
+body.is-dragging .empty-state {
+  display: none;
+}
+
 /* ----- Zone 2 & 3: Tab lists ----- */
 
 .tabs-list {
