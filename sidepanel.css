@@ -96,12 +96,27 @@ body.is-dragging:not(.is-dragging-from-zone3) .zone-unlinked .zone-drop-hint {
   font-size: 20px;
 }
 
-body.is-dragging .zone-unlinked.drag-over {
-  background: var(--accent-soft);
+/* Zone 1/2 drag-over: subtle highlight */
+#pinned-grid.drag-over,
+#tabs-list.drag-over {
+  background: rgba(255, 255, 255, 0.04);
   border-radius: var(--radius);
 }
 
-body.is-dragging .zone-unlinked.drag-over .zone-drop-hint {
+/* Zone 3 drag-over: accent for active tabs, danger for inactive */
+body.is-dragging .zone-unlinked.drag-over {
+  border-radius: var(--radius);
+}
+
+body.is-dragging:not(.is-dragging-inactive) .zone-unlinked.drag-over {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body.is-dragging.is-dragging-inactive .zone-unlinked.drag-over {
+  background: var(--accent-soft);
+}
+
+body.is-dragging.is-dragging-inactive .zone-unlinked.drag-over .zone-drop-hint {
   color: var(--accent);
 }
 

@@ -27,24 +27,23 @@ async function init(): Promise<void> {
     if (target.closest("#zone-unlinked")) {
       document.body.classList.add("is-dragging-from-zone3");
     }
-    // Update zone 3 hint based on whether the dragged bookmark is loaded
+    // Track if dragging an unloaded bookmark (for danger styling on zone 3)
+    const bmId = target.dataset?.bookmarkId;
+    const isLoaded = target.classList.contains("is-loaded");
     const hint = document.querySelector(".zone-drop-hint") as HTMLElement;
-    if (hint) {
-      const bmId = target.dataset?.bookmarkId;
-      const isLoaded = target.classList.contains("is-loaded");
-      if (bmId && !isLoaded) {
-        hint.textContent = "🗑";
-      } else {
-        hint.textContent = "";
-      }
+    if (bmId && !isLoaded) {
+      document.body.classList.add("is-dragging-inactive");
+      if (hint) hint.textContent = "🗑";
+    } else {
+      if (hint) hint.textContent = "";
     }
   });
   document.addEventListener("dragend", () => {
-    document.body.classList.remove("is-dragging", "is-dragging-from-zone3");
+    document.body.classList.remove("is-dragging", "is-dragging-from-zone3", "is-dragging-inactive");
     hideDropIndicator();
   });
   document.addEventListener("drop", () => {
-    document.body.classList.remove("is-dragging", "is-dragging-from-zone3");
+    document.body.classList.remove("is-dragging", "is-dragging-from-zone3", "is-dragging-inactive");
     hideDropIndicator();
   });
 
