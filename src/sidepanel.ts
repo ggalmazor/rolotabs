@@ -4,6 +4,7 @@
 // Renders the three-zone sidebar and handles user interactions.
 
 import type { AnnotatedBookmark, OpenTab, PanelState } from "./lib/types.ts";
+import { showContextMenu, type MenuEntry } from "./lib/context-menu.ts";
 
 let state: PanelState | null = null;
 let collapsedFolders = new Set<string>();
@@ -439,58 +440,91 @@ async function handleDropOnFolder(e: DragEvent, folderId: string): Promise<void>
 // Context menus
 // ---------------------------------------------------------------------------
 
-function onPinnedContext(_event: MouseEvent, item: AnnotatedBookmark): void {
-  const action = prompt(
-    `${item.title}\n\nActions:\n1 — Unpin\n2 — Remove bookmark\n\nEnter number:`,
-  );
-  if (action === "1") {
-    sendMessage({ type: "unpinBookmark", bookmarkId: item.id }).then(() => refreshState());
-  } else if (action === "2") {
-    removeBookmark(item.id);
-  }
+function onPinnedContext(event: MouseEvent, item: AnnotatedBookmark): void {
+  showContextMenu(event.clientX, event.clientY, [
+    {
+      label: "Unpin",
+      icon: "📌",
+      action: () => sendMessage({ type: "unpinBookmark", bookmarkId: item.id }).then(() => refreshState()),
+    },
+    { separator: true },
+    {
+      label: "Delete bookmark",
+      icon: "🗑",
+      danger: true,
+      action: () => removeBookmark(item.id),
+    },
+  ]);
 }
 
-function onFolderContext(_event: MouseEvent, folder: AnnotatedBookmark): void {
-  const action = prompt(
-    `📁 ${folder.title}\n\nActions:\n1 — New subfolder\n2 — Rename\n3 — Delete folder\n\nEnter number:`,
-  );
-  if (action === "1") {
-    const name = prompt("Folder name:");
-    if (name) {
-      sendMessage({ type: "createFolder", parentId: folder.id, title: name }).then(() => refreshState());
-    }
-  } else if (action === "2") {
-    const newTitle = prompt("New name:", folder.title);
-    if (newTitle && newTitle !== folder.title) {
-      chrome.bookmarks.update(folder.id, { title: newTitle });
-      refreshState();
-    }
-  } else if (action === "3") {
-    const hasChildren = folder.children && folder.children.length > 0;
-    const msg = hasChildren
-      ? `Delete "${folder.title}" and ALL its contents?`
-      : `Delete empty folder "${folder.title}"?`;
-    if (confirm(msg)) {
-      sendMessage({ type: "removeFolder", folderId: folder.id }).then(() => refreshState());
-    }
-  }
+function onFolderContext(event: MouseEvent, folder: AnnotatedBookmark): void {
+  const entries: MenuEntry[] = [
+    {
+      label: "New subfolder",
+      icon: "📁",
+      action: () => {
+        const name = prompt("Folder name:");
+        if (name) {
+          sendMessage({ type: "createFolder", parentId: folder.id, title: name }).then(() => refreshState());
+        }
+      },
+    },
+    {
+      label: "Rename",
+      icon: "✏️",
+      action: () => {
+        const newTitle = prompt("New name:", folder.title);
+        if (newTitle && newTitle !== folder.title) {
+          chrome.bookmarks.update(folder.id, { title: newTitle });
+          refreshState();
+        }
+      },
+    },
+    { separator: true },
+    {
+      label: "Delete folder",
+      icon: "🗑",
+      danger: true,
+      action: () => {
+        const hasChildren = folder.children && folder.children.length > 0;
+        const msg = hasChildren
+          ? `Delete "${folder.title}" and all its contents?`
+          : `Delete "${folder.title}"?`;
+        if (confirm(msg)) {
+          sendMessage({ type: "removeFolder", folderId: folder.id }).then(() => refreshState());
+        }
+      },
+    },
+  ];
+  showContextMenu(event.clientX, event.clientY, entries);
 }
 
-function onBookmarkContext(_event: MouseEvent, item: AnnotatedBookmark): void {
-  const action = prompt(
-    `${item.title}\n\nActions:\n1 — Pin to top\n2 — Remove bookmark\n3 — Rename\n\nEnter number:`,
-  );
-  if (action === "1") {
-    sendMessage({ type: "pinBookmark", bookmarkId: item.id }).then(() => refreshState());
-  } else if (action === "2") {
-    removeBookmark(item.id);
-  } else if (action === "3") {
-    const newTitle = prompt("New name:", item.title);
-    if (newTitle && newTitle !== item.title) {
-      chrome.bookmarks.update(item.id, { title: newTitle });
-      refreshState();
-    }
-  }
+function onBookmarkContext(event: MouseEvent, item: AnnotatedBookmark): void {
+  showContextMenu(event.clientX, event.clientY, [
+    {
+      label: "Pin to top",
+      icon: "📌",
+      action: () => sendMessage({ type: "pinBookmark", bookmarkId: item.id }).then(() => refreshState()),
+    },
+    {
+      label: "Rename",
+      icon: "✏️",
+      action: () => {
+        const newTitle = prompt("New name:", item.title);
+        if (newTitle && newTitle !== item.title) {
+          chrome.bookmarks.update(item.id, { title: newTitle });
+          refreshState();
+        }
+      },
+    },
+    { separator: true },
+    {
+      label: "Delete bookmark",
+      icon: "🗑",
+      danger: true,
+      action: () => removeBookmark(item.id),
+    },
+  ]);
 }
 
 // ---------------------------------------------------------------------------
