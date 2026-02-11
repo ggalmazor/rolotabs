@@ -187,8 +187,8 @@ function renderFolder(folder: AnnotatedBookmark): HTMLElement {
   header.className = "folder-header";
 
   const arrow = document.createElement("span");
-  arrow.className = `folder-arrow ${isCollapsed ? "collapsed" : ""}`;
-  arrow.textContent = "▼";
+  arrow.className = `folder-arrow`;
+  arrow.textContent = isCollapsed ? "📁" : "📂";
 
   const name = document.createElement("span");
   name.className = "folder-name";

@@ -303,15 +303,9 @@ body.is-dragging .empty-state {
 
 
 .folder-arrow {
-  font-size: 10px;
-  color: var(--text-dim);
-  transition: transform var(--transition);
-  width: 12px;
+  font-size: 14px;
+  width: 18px;
   text-align: center;
-}
-
-.folder-arrow.collapsed {
-  transform: rotate(-90deg);
 }
 
 .folder-name {
