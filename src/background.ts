@@ -216,6 +216,10 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
     await tryAssociateTab(tab);
   }
+  // Chrome assigns groupId asynchronously after tab creation
+  if (changeInfo.groupId !== undefined) {
+    await ungroupIfNotBookmarked(tab);
+  }
   if (changeInfo.status === "complete" || changeInfo.title) {
     await notifySidePanel();
   }
