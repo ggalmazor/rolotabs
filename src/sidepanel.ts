@@ -230,12 +230,8 @@ function renderUnlinked(unlinked: UnlinkedTab[]): void {
   const section = document.getElementById("zone-unlinked")!;
   list.innerHTML = "";
 
-  if (unlinked.length === 0) {
-    section.style.display = "none";
-    return;
-  }
-
-  section.style.display = "";
+  section.classList.toggle("is-empty", unlinked.length === 0);
+  if (unlinked.length === 0) return;
 
   for (const tab of unlinked) {
     const el = document.createElement("div");

@@ -55,6 +55,10 @@ body {
   min-height: 0;
 }
 
+.zone-unlinked.is-empty {
+  display: none;
+}
+
 .zone-unlinked::-webkit-scrollbar {
   width: 4px;
 }
