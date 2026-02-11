@@ -326,7 +326,7 @@ body.is-dragging.is-dragging-inactive .zone-unlinked.drag-over .zone-drop-hint {
 }
 
 .folder-header.drag-over {
-  background: var(--accent-soft);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-sm);
 }
 
