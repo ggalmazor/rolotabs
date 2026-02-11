@@ -122,6 +122,16 @@ function renderBookmarks(roots: AnnotatedBookmark[]): void {
     }
   }
 
+  // Right-click on zone 2 background to create folder
+  list.addEventListener("contextmenu", (e) => {
+    if ((e.target as HTMLElement).closest(".tab-item, .folder-header")) return;
+    e.preventDefault();
+    const name = prompt("New folder name:");
+    if (name && state?.rootFolderId) {
+      sendMessage({ type: "createFolder", parentId: state.rootFolderId, title: name }).then(() => refreshState());
+    }
+  });
+
   setupDropZone(list, "bookmarks");
 }
 
@@ -133,11 +143,41 @@ function renderFolder(folder: AnnotatedBookmark): HTMLElement {
 
   const header = document.createElement("div");
   header.className = "folder-header";
-  header.innerHTML = `
-    <span class="folder-arrow ${isCollapsed ? "collapsed" : ""}">▼</span>
-    <span class="folder-name">${escapeHtml(folder.title)}</span>
-  `;
+
+  const arrow = document.createElement("span");
+  arrow.className = `folder-arrow ${isCollapsed ? "collapsed" : ""}`;
+  arrow.textContent = "▼";
+
+  const name = document.createElement("span");
+  name.className = "folder-name";
+  name.textContent = folder.title;
+
+  header.appendChild(arrow);
+  header.appendChild(name);
+
   header.addEventListener("click", () => toggleFolder(folder.id));
+  header.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    onFolderContext(e, folder);
+  });
+
+  // Folder header is a drop target for moving bookmarks into it
+  header.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer!.dropEffect = "move";
+    header.classList.add("drag-over");
+  });
+  header.addEventListener("dragleave", () => {
+    header.classList.remove("drag-over");
+  });
+  header.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    header.classList.remove("drag-over");
+    await handleDropOnFolder(e, folder.id);
+  });
+
   container.appendChild(header);
 
   const children = document.createElement("div");
@@ -203,6 +243,17 @@ function renderTabItem(item: AnnotatedBookmark): HTMLElement {
     e.preventDefault();
     onBookmarkContext(e, item);
   });
+
+  // Draggable within zone 2 and to zone 1
+  el.draggable = true;
+  el.addEventListener("dragstart", (e) => {
+    e.dataTransfer!.setData(
+      "application/rolotabs",
+      JSON.stringify({ type: "bookmark", bookmarkId: item.id }),
+    );
+    el.classList.add("dragging");
+  });
+  el.addEventListener("dragend", () => el.classList.remove("dragging"));
 
   return el;
 }
@@ -301,16 +352,20 @@ function setupDropZone(element: HTMLElement, zone: "pinned" | "bookmarks"): void
 
     if (data.type === "openTab") {
       // Promote: create bookmark from open tab
-      await sendMessage({
-        type: "promoteTab",
-        tabId: data.tabId,
-        pinned: target === "pinned",
-      });
+      if (target === "pinned") {
+        await sendMessage({ type: "promoteTab", tabId: data.tabId, pinned: true });
+      } else {
+        await sendMessage({ type: "promoteTab", tabId: data.tabId, parentId: state?.rootFolderId });
+      }
     } else if (data.type === "bookmark") {
       if (target === "pinned") {
         await sendMessage({ type: "pinBookmark", bookmarkId: data.bookmarkId });
       } else {
+        // Unpin if pinned, and move to root folder
         await sendMessage({ type: "unpinBookmark", bookmarkId: data.bookmarkId });
+        if (state?.rootFolderId) {
+          await sendMessage({ type: "moveBookmark", bookmarkId: data.bookmarkId, parentId: state.rootFolderId });
+        }
       }
     }
 
@@ -360,6 +415,23 @@ function toggleFolder(folderId: string): void {
 }
 
 // ---------------------------------------------------------------------------
+// Drop on folder helper
+// ---------------------------------------------------------------------------
+
+async function handleDropOnFolder(e: DragEvent, folderId: string): Promise<void> {
+  const raw = e.dataTransfer!.getData("application/rolotabs");
+  if (!raw) return;
+  const data = JSON.parse(raw);
+
+  if (data.type === "openTab") {
+    await sendMessage({ type: "promoteTab", tabId: data.tabId, parentId: folderId });
+  } else if (data.type === "bookmark") {
+    await sendMessage({ type: "moveBookmark", bookmarkId: data.bookmarkId, parentId: folderId });
+  }
+  await refreshState();
+}
+
+// ---------------------------------------------------------------------------
 // Context menus
 // ---------------------------------------------------------------------------
 
@@ -371,6 +443,32 @@ function onPinnedContext(_event: MouseEvent, item: AnnotatedBookmark): void {
     sendMessage({ type: "unpinBookmark", bookmarkId: item.id }).then(() => refreshState());
   } else if (action === "2") {
     removeBookmark(item.id);
+  }
+}
+
+function onFolderContext(_event: MouseEvent, folder: AnnotatedBookmark): void {
+  const action = prompt(
+    `📁 ${folder.title}\n\nActions:\n1 — New subfolder\n2 — Rename\n3 — Delete folder\n\nEnter number:`,
+  );
+  if (action === "1") {
+    const name = prompt("Folder name:");
+    if (name) {
+      sendMessage({ type: "createFolder", parentId: folder.id, title: name }).then(() => refreshState());
+    }
+  } else if (action === "2") {
+    const newTitle = prompt("New name:", folder.title);
+    if (newTitle && newTitle !== folder.title) {
+      chrome.bookmarks.update(folder.id, { title: newTitle });
+      refreshState();
+    }
+  } else if (action === "3") {
+    const hasChildren = folder.children && folder.children.length > 0;
+    const msg = hasChildren
+      ? `Delete "${folder.title}" and ALL its contents?`
+      : `Delete empty folder "${folder.title}"?`;
+    if (confirm(msg)) {
+      sendMessage({ type: "removeFolder", folderId: folder.id }).then(() => refreshState());
+    }
   }
 }
 

@@ -264,6 +264,11 @@ body {
   background: var(--bg-hover);
 }
 
+.folder-header.drag-over {
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+}
+
 .folder-arrow {
   font-size: 10px;
   color: var(--text-dim);

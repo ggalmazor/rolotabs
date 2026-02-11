@@ -53,4 +53,5 @@ export interface PanelState {
   openTabs: OpenTab[];
   activeTabId: number | null;
   pinnedIds: string[];
+  rootFolderId: string;
 }

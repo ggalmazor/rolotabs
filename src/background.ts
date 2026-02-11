@@ -22,6 +22,9 @@ const tabToBookmark = new Map<number, string>();
 // Pinned bookmark IDs (ordered), loaded from storage
 let pinnedIds: string[] = [];
 
+// "Other Bookmarks" folder ID — the root destination for pinned bookmarks
+let otherBookmarksFolderId: string | null = null;
+
 // ---------------------------------------------------------------------------
 // Initialization
 // ---------------------------------------------------------------------------
@@ -34,9 +37,18 @@ chrome.runtime.onStartup.addListener(async () => {
 init();
 
 async function init(): Promise<void> {
+  await findOtherBookmarksFolder();
   await loadPinnedIds();
   await rebuildAssociations();
   await notifySidePanel();
+}
+
+async function findOtherBookmarksFolder(): Promise<void> {
+  const tree = await chrome.bookmarks.getTree();
+  const other = tree[0].children!.find(
+    (n) => n.title === "Other Bookmarks" || n.title === "Other bookmarks"
+  );
+  otherBookmarksFolderId = other?.id ?? tree[0].children![1]?.id ?? "2";
 }
 
 async function loadPinnedIds(): Promise<void> {
@@ -46,6 +58,22 @@ async function loadPinnedIds(): Promise<void> {
 
 async function savePinnedIds(): Promise<void> {
   await chrome.storage.local.set({ pinnedIds });
+}
+
+/** Remove any pinned IDs that no longer exist as bookmarks. */
+async function cleanupPinnedIds(): Promise<boolean> {
+  const before = pinnedIds.length;
+  const valid: string[] = [];
+  for (const id of pinnedIds) {
+    try {
+      await chrome.bookmarks.get(id);
+      valid.push(id);
+    } catch {
+      // Bookmark was deleted
+    }
+  }
+  pinnedIds = valid;
+  return pinnedIds.length !== before;
 }
 
 // ---------------------------------------------------------------------------
@@ -262,6 +290,10 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       if (!pinnedIds.includes(bookmarkId)) {
         pinnedIds.push(bookmarkId);
         await savePinnedIds();
+        // Move to root folder (out of any subfolder)
+        if (otherBookmarksFolderId) {
+          await chrome.bookmarks.move(bookmarkId, { parentId: otherBookmarksFolderId });
+        }
       }
       return await getFullState();
     }
@@ -279,17 +311,50 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
     case "promoteTab": {
       // Create a bookmark from an open tab
       const tabId = message.tabId as number;
+      const parentId = message.parentId as string | undefined;
       const tab = await chrome.tabs.get(tabId);
-      const bm = await chrome.bookmarks.create({
+      const createOpts: chrome.bookmarks.BookmarkCreateArg = {
         title: tab.title || tab.url,
         url: tab.url,
-      });
+      };
+      if (message.pinned) {
+        // Pinned bookmarks go to root
+        createOpts.parentId = otherBookmarksFolderId ?? undefined;
+      } else if (parentId) {
+        createOpts.parentId = parentId;
+      }
+      const bm = await chrome.bookmarks.create(createOpts);
       bookmarkToTab.set(bm.id, tabId);
       tabToBookmark.set(tabId, bm.id);
       if (message.pinned) {
         pinnedIds.push(bm.id);
         await savePinnedIds();
       }
+      return await getFullState();
+    }
+
+    case "moveBookmark": {
+      const bookmarkId = message.bookmarkId as string;
+      const parentId = message.parentId as string;
+      const index = message.index as number | undefined;
+      await chrome.bookmarks.move(bookmarkId, { parentId, index });
+      return await getFullState();
+    }
+
+    case "createFolder": {
+      const parentId = message.parentId as string;
+      const title = message.title as string;
+      await chrome.bookmarks.create({ parentId, title });
+      return await getFullState();
+    }
+
+    case "removeFolder": {
+      const folderId = message.folderId as string;
+      // removeTree handles non-empty folders
+      await chrome.bookmarks.removeTree(folderId);
+      // Clean up any pinned IDs that were inside
+      const removed = await cleanupPinnedIds();
+      if (removed) await savePinnedIds();
       return await getFullState();
     }
 
@@ -372,6 +437,7 @@ async function getFullState() {
     openTabs,
     activeTabId,
     pinnedIds,
+    rootFolderId: otherBookmarksFolderId!,
   };
 }
 
