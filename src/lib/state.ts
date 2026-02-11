@@ -79,8 +79,8 @@ export function annotateNode(
 }
 
 /**
- * Get all open tabs (excluding chrome:// and extension pages),
- * annotated with bookmark and active status.
+ * Get open tabs that are NOT associated with any bookmark
+ * (excluding chrome:// and extension pages).
  */
 export function getOpenTabs(
   allTabs: TabInfo[],
@@ -88,6 +88,7 @@ export function getOpenTabs(
   activeTabId: number | null,
 ): OpenTab[] {
   return allTabs
+    .filter((t) => !tabToBookmark.has(t.id))
     .filter((t) => !t.url?.startsWith("chrome://"))
     .filter((t) => !t.url?.startsWith("chrome-extension://"))
     .map((t) => ({
@@ -96,7 +97,7 @@ export function getOpenTabs(
       url: t.url,
       favIconUrl: t.favIconUrl,
       isActive: t.id === activeTabId,
-      isBookmarked: tabToBookmark.has(t.id),
+      isBookmarked: false,
     }));
 }
 

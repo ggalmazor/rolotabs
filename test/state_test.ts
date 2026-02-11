@@ -148,7 +148,7 @@ describe("annotateNode", () => {
 });
 
 describe("getOpenTabs", () => {
-  it("returns all open tabs regardless of bookmark association", () => {
+  it("excludes tabs associated with bookmarks", () => {
     const tabs = [
       { id: 1, url: "https://example.com", title: "Ex" },
       { id: 2, url: "https://other.com", title: "Other" },
@@ -157,13 +157,9 @@ describe("getOpenTabs", () => {
 
     const result = getOpenTabs(tabs, tabToBookmark, 2);
 
-    assertEquals(result.length, 2);
-    assertEquals(result[0].tabId, 1);
-    assertEquals(result[0].isBookmarked, true);
-    assertEquals(result[0].isActive, false);
-    assertEquals(result[1].tabId, 2);
-    assertEquals(result[1].isBookmarked, false);
-    assertEquals(result[1].isActive, true);
+    assertEquals(result.length, 1);
+    assertEquals(result[0].tabId, 2);
+    assertEquals(result[0].isActive, true);
   });
 
   it("filters out chrome:// and extension URLs", () => {
@@ -179,10 +175,11 @@ describe("getOpenTabs", () => {
     assertEquals(result[0].tabId, 3);
   });
 
-  it("returns empty when all tabs are chrome:// pages", () => {
-    const tabs = [{ id: 1, url: "chrome://extensions/", title: "Ext" }];
+  it("returns empty when all tabs are bookmarked", () => {
+    const tabs = [{ id: 1, url: "https://example.com", title: "Ex" }];
+    const tabToBookmark = new Map<number, string>([[1, "bm1"]]);
 
-    assertEquals(getOpenTabs(tabs, new Map(), null).length, 0);
+    assertEquals(getOpenTabs(tabs, tabToBookmark, null).length, 0);
   });
 });
 
