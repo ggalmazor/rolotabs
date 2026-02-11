@@ -63,10 +63,6 @@ body {
   padding: 0 8px;
 }
 
-#zone-tabs .tabs-list {
-  padding-bottom: 30px;
-}
-
 .zone-unlinked {
   flex-shrink: 0;
 }
@@ -181,12 +177,20 @@ body.is-dragging .zone-unlinked.is-empty .zone-header {
   font-size: 11px;
 }
 
+body.is-dragging .pinned-grid {
+  min-height: 40px;
+}
+
+body.is-dragging .tabs-list {
+  min-height: 40px;
+}
+
 body.is-dragging .pinned-grid-empty {
-  visibility: hidden;
+  display: none;
 }
 
 body.is-dragging .empty-state {
-  visibility: hidden;
+  display: none;
 }
 
 /* ----- Zone 2 & 3: Tab lists ----- */
