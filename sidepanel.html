@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rolotabs</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Zone 1: Pinned (favicon grid) -->
+      <section id="zone-pinned" class="zone">
+        <div id="pinned-grid" class="pinned-grid"></div>
+        <div class="zone-divider"></div>
+      </section>
+
+      <!-- Zone 2: Bookmarked tabs (hierarchical list) -->
+      <section id="zone-tabs" class="zone zone-scrollable">
+        <div id="tabs-list" class="tabs-list"></div>
+      </section>
+
+      <!-- Zone 3: Unlinked tabs (ephemeral) -->
+      <section id="zone-unlinked" class="zone">
+        <div class="zone-divider"></div>
+        <div class="zone-header">
+          <span class="zone-label">Today</span>
+        </div>
+        <div id="unlinked-list" class="tabs-list"></div>
+      </section>
+    </div>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>
