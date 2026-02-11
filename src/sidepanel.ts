@@ -287,6 +287,14 @@ function renderUnlinked(unlinked: UnlinkedTab[]): void {
 // ---------------------------------------------------------------------------
 
 function setupDropZone(element: HTMLElement, targetFolderId: string): void {
+  // Prevent stacking listeners on re-render
+  if (element.dataset.dropZone) {
+    element.dataset.dropTarget = targetFolderId;
+    return;
+  }
+  element.dataset.dropZone = "true";
+  element.dataset.dropTarget = targetFolderId;
+
   element.addEventListener("dragover", (e) => {
     e.preventDefault();
     e.dataTransfer!.dropEffect = "move";
@@ -306,18 +314,19 @@ function setupDropZone(element: HTMLElement, targetFolderId: string): void {
     if (!raw) return;
 
     const data = JSON.parse(raw);
+    const currentTarget = element.dataset.dropTarget!;
 
     if (data.type === "unlinked") {
       await sendMessage({
         type: "promoteTab",
         tabId: data.tabId,
-        targetFolderId,
+        targetFolderId: currentTarget,
       });
     } else if (data.type === "bookmark") {
       await sendMessage({
         type: "moveBookmark",
         bookmarkId: data.bookmarkId,
-        targetFolderId,
+        targetFolderId: currentTarget,
       });
     }
 
