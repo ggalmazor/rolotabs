@@ -141,7 +141,7 @@ export function showDangerDropGhost(container: HTMLElement, label?: string): voi
   g.textContent = label || "🗑";
   g.className = "drop-ghost drop-ghost-danger";
   g.style.display = "";
-  container.appendChild(g);
+  container.prepend(g);
 }
 
 /** Hide and detach the ghost. */
