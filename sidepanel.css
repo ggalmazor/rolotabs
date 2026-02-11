@@ -110,8 +110,8 @@ body {
 
 .pinned-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(auto-fill, 28px);
+  gap: 2px;
   padding: 4px;
 }
 
@@ -135,9 +135,9 @@ body {
 }
 
 .pinned-item .favicon {
-  width: 10px;
-  height: 10px;
-  border-radius: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
   opacity: 0.6;
   transition: opacity var(--transition);
 }
@@ -152,10 +152,10 @@ body {
 
 .pinned-item .status-dot {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 6px;
-  height: 6px;
+  bottom: 2px;
+  right: 2px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: var(--unloaded-dot);
 }
