@@ -93,6 +93,15 @@ function sendMessage(message: { type: string; [key: string]: unknown }): Promise
 
 function render(): void {
   if (!state) return;
+
+  // Show onboarding if no pinned items and no bookmarks
+  const onboarding = document.getElementById("onboarding");
+  const isEmpty = state.pinned.length === 0 &&
+    state.bookmarks.every((b) => !b.children || b.children.length === 0);
+  if (onboarding) {
+    onboarding.style.display = isEmpty ? "" : "none";
+  }
+
   renderPinned(state.pinned);
   renderBookmarks(state.bookmarks);
   renderOpenTabs(state.openTabs);

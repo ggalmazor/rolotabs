@@ -554,6 +554,30 @@ body.is-dragging .empty-state {
   color: var(--text-secondary);
 }
 
+/* ----- Onboarding ----- */
+
+.onboarding {
+  padding: 16px 12px;
+  text-align: center;
+}
+
+.onboarding-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.onboarding-steps {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.onboarding-steps p {
+  margin: 4px 0;
+}
+
 /* ----- Empty states ----- */
 
 .empty-state {
