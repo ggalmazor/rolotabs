@@ -110,9 +110,11 @@ function renderBookmarks(roots: AnnotatedBookmark[]): void {
   const list = document.getElementById("tabs-list")!;
   list.innerHTML = "";
 
+  let hasItems = false;
   for (const root of roots) {
     if (root.children) {
       for (const child of root.children) {
+        hasItems = true;
         if (child.isFolder) {
           list.appendChild(renderFolder(child));
         } else {
@@ -120,6 +122,10 @@ function renderBookmarks(roots: AnnotatedBookmark[]): void {
         }
       }
     }
+  }
+
+  if (!hasItems) {
+    list.innerHTML = '<div class="empty-state">Drag tabs here to bookmark</div>';
   }
 
   // Right-click on zone 2 background to create folder
