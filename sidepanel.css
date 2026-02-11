@@ -405,6 +405,14 @@ body.is-dragging .zone-unlinked.is-empty .zone-header {
   margin-left: 16px;
 }
 
+.drop-ghost-unbookmark {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: rgba(59, 130, 246, 0.8);
+  justify-content: center;
+  font-size: 16px;
+}
+
 .drop-ghost-danger {
   background: var(--accent-soft);
   border-color: var(--accent);

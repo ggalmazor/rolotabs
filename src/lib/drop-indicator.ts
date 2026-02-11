@@ -126,6 +126,15 @@ export function showFolderDropGhost(folderHeader: HTMLElement, label?: string): 
 /**
  * Show a danger ghost (for delete actions).
  */
+export function showUnbookmarkDropGhost(container: HTMLElement, label?: string): void {
+  const g = getGhost();
+  detachGhost();
+  g.textContent = label || "📂→";
+  g.className = "drop-ghost drop-ghost-unbookmark";
+  g.style.display = "";
+  container.appendChild(g);
+}
+
 export function showDangerDropGhost(container: HTMLElement, label?: string): void {
   const g = getGhost();
   detachGhost();

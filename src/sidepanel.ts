@@ -5,7 +5,7 @@
 
 import type { AnnotatedBookmark, OpenTab, PanelState } from "./lib/types.ts";
 import { showContextMenu, type MenuEntry } from "./lib/context-menu.ts";
-import { showDropIndicator, showGridDropIndicator, hideDropIndicator, showFolderDropGhost, showDangerDropGhost } from "./lib/drop-indicator.ts";
+import { showDropIndicator, showGridDropIndicator, hideDropIndicator, showFolderDropGhost, showDangerDropGhost, showUnbookmarkDropGhost } from "./lib/drop-indicator.ts";
 
 let state: PanelState | null = null;
 let collapsedFolders = new Set<string>();
@@ -377,6 +377,8 @@ function setupUnbookmarkDropZone(element: HTMLElement): void {
     e.dataTransfer!.dropEffect = "move";
     if (document.body.classList.contains("is-dragging-inactive")) {
       showDangerDropGhost(element, "🗑");
+    } else {
+      showUnbookmarkDropGhost(element, "📂✕");
     }
   });
 
