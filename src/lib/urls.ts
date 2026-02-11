@@ -1,12 +1,7 @@
-// URL comparison utilities
-
 /**
  * Compare URLs loosely: ignore trailing slashes and fragments, keep query strings.
- * @param {string} url1
- * @param {string} url2
- * @returns {boolean}
  */
-export function urlsMatch(url1, url2) {
+export function urlsMatch(url1: string | null | undefined, url2: string | null | undefined): boolean {
   if (!url1 || !url2) return false;
   try {
     const a = new URL(url1);
@@ -17,6 +12,6 @@ export function urlsMatch(url1, url2) {
   }
 }
 
-function normalize(url) {
+function normalize(url: URL): string {
   return url.origin + url.pathname.replace(/\/+$/, "") + url.search;
 }

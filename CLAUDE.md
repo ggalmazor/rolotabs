@@ -17,9 +17,9 @@ Rolotabs is a Chrome extension (Manifest V3) that reimagines bookmarks as a pers
 ## Key design decisions
 
 - **Bookmarks as source of truth** — no sync layer, no IndexedDB; Chrome bookmark sync handles cross-device.
-- **Vanilla JS, no build step** — edit files, reload extension. No framework, no bundler.
+- **TypeScript + Deno** — native TS, no tsconfig needed. esbuild bundles to plain JS for Chrome.
 - **Dark theme only** (for now) — CSS custom properties in `:root`.
-- **Testable core** — all pure logic lives in `lib/` and is tested outside Chrome. Chrome API interactions stay in `background.js`/`sidepanel.js`.
+- **Testable core** — all pure logic lives in `src/lib/` and is tested with Deno's test runner. Chrome API interactions stay in `src/background.ts`/`src/sidepanel.ts`.
 
 ## TDD workflow — MANDATORY
 
@@ -47,48 +47,60 @@ Rolotabs is a Chrome extension (Manifest V3) that reimagines bookmarks as a pers
 ### Running tests
 
 ```sh
-npm test              # run all tests once
-npm run test:watch    # watch mode (re-runs on file changes)
+deno task test         # run all tests once
+deno test --watch      # watch mode (re-runs on file changes)
+deno task check        # type-check all source files
+deno task build        # bundle TS → dist/ (for Chrome)
+deno task dev          # build in watch mode
+deno task fmt          # format source
+deno task lint         # lint source
 ```
 
 ### Test file conventions
 
-- Test files go in `test/` and match `*.test.js`
-- Mirror the `lib/` structure: `lib/urls.js` → `test/urls.test.js`
-- Use `describe`/`it` from `node:test` and `assert` from `node:assert/strict`
+- Test files go in `test/` and match `*_test.ts` (Deno convention: underscores, not dots)
+- Mirror the `src/lib/` structure: `src/lib/urls.ts` → `test/urls_test.ts`
+- Use `describe`/`it` from `jsr:@std/testing/bdd` and `assertEquals` from `jsr:@std/assert`
 - Test names should read as sentences: `it("returns null for empty URL")`
 
 ## Development workflow
 
-1. Load unpacked at `chrome://extensions/` (Developer mode)
-2. Write a test, see it fail
-3. Write the code, see it pass
-4. Click refresh on the extension card, reopen side panel for manual verification
-5. Commit when tests are green
+1. Run `deno task dev` (esbuild watch mode — rebuilds in ~5ms on save)
+2. Load unpacked at `chrome://extensions/` pointing to the project root
+3. Write a test, see it fail
+4. Write the code, see it pass
+5. Click refresh on the extension card, reopen side panel for manual verification
+6. Commit when tests are green
 
 ## Code style
 
-- Plain ES modules / modern JS (async/await, Map, Set)
+- TypeScript with strict mode
+- Deno-style imports: explicit `.ts` extensions, `jsr:` / `npm:` specifiers
 - Semicolons — used consistently throughout
 - Functions are plain `async function name()` style, not arrow-assigned
 - Keep it simple: no abstractions until they earn their place
-- Extract pure logic into `lib/` — Chrome API glue stays in the top-level files
+- Extract pure logic into `src/lib/` — Chrome API glue stays in `src/background.ts` and `src/sidepanel.ts`
+- Use `deno fmt` for formatting, `deno lint` for linting
 
 ## File structure
 
 ```
-manifest.json          # Extension manifest
-package.json           # Scripts (test, test:watch)
-background.js          # Service worker (Chrome API glue)
-sidepanel.html         # Side panel markup
-sidepanel.js           # Side panel logic (rendering, events)
+manifest.json          # Extension manifest (points to dist/)
+deno.json              # Deno config: tasks, fmt, lint, compiler options
+build.ts               # esbuild script (TS → dist/)
+sidepanel.html         # Side panel markup (loads dist/sidepanel.js)
 sidepanel.css          # Styles (dark theme, CSS vars)
-lib/                   # Pure, testable modules
-  urls.js              # URL comparison
-  state.js             # State management logic
-test/                  # Tests (node:test)
-  urls.test.js
-  state.test.js
+src/                   # TypeScript source
+  background.ts        # Service worker (Chrome API glue)
+  sidepanel.ts         # Side panel logic (rendering, events)
+  lib/                 # Pure, testable modules
+    types.ts           # Shared type definitions
+    urls.ts            # URL comparison
+    state.ts           # State management logic
+test/                  # Tests (deno test)
+  urls_test.ts
+  state_test.ts
+dist/                  # Built JS for Chrome (gitignored)
 icons/                 # Extension icons (16, 32, 48, 128)
 ```
 
@@ -108,3 +120,5 @@ icons/                 # Extension icons (16, 32, 48, 128)
 - Context menu currently uses `prompt()` — placeholder, needs a proper custom menu (Phase 3).
 - URL matching (`urlsMatch`) strips trailing slashes and fragments but keeps query strings.
 - Bug found by tests: `annotateNode` would mark unloaded bookmarks as "active" when `activeTabId` was null — fixed with null guard.
+- Chrome types come from `npm:chrome-types` via `/// <reference types="..." />` in the extension source files.
+- esbuild bundles to IIFE format targeting Chrome 114+ — no ES module loading in service workers.

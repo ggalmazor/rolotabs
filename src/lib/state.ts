@@ -1,16 +1,18 @@
-// State management — pure logic for bookmark↔tab associations
-
-import { urlsMatch } from "./urls.js";
+import { urlsMatch } from "./urls.ts";
+import type {
+  AnnotatedBookmark,
+  Associations,
+  BookmarkNode,
+  TabInfo,
+  UnlinkedTab,
+} from "./types.ts";
 
 /**
- * Build bookmark→tab and tab→bookmark maps from a list of bookmarks and tabs.
- * @param {Array<{id: string, url?: string}>} bookmarks
- * @param {Array<{id: number, url?: string}>} tabs
- * @returns {{ bookmarkToTab: Map<string, number|null>, tabToBookmark: Map<number, string> }}
+ * Build bookmark→tab and tab→bookmark maps from bookmarks and tabs.
  */
-export function buildAssociations(bookmarks, tabs) {
-  const bookmarkToTab = new Map();
-  const tabToBookmark = new Map();
+export function buildAssociations(bookmarks: BookmarkNode[], tabs: TabInfo[]): Associations {
+  const bookmarkToTab = new Map<string, number | null>();
+  const tabToBookmark = new Map<number, string>();
 
   for (const bm of bookmarks) {
     if (!bm.url) continue; // skip folders
@@ -31,17 +33,17 @@ export function buildAssociations(bookmarks, tabs) {
 
 /**
  * Find the first unassociated bookmark matching a URL.
- * @param {string} url
- * @param {Map<string, number|null>} bookmarkToTab
- * @param {Array<{id: string, url?: string}>} bookmarks - flat list for URL lookup
- * @returns {string|null} bookmarkId or null
  */
-export function findMatchingBookmark(url, bookmarkToTab, bookmarks) {
+export function findMatchingBookmark(
+  url: string | null | undefined,
+  bookmarkToTab: Map<string, number | null>,
+  bookmarks: BookmarkNode[],
+): string | null {
   if (!url) return null;
   for (const [bmId, tabId] of bookmarkToTab.entries()) {
     if (tabId !== null) continue;
     const bm = bookmarks.find((b) => b.id === bmId);
-    if (bm && bm.url && urlsMatch(bm.url, url)) {
+    if (bm?.url && urlsMatch(bm.url, url)) {
       return bmId;
     }
   }
@@ -50,14 +52,14 @@ export function findMatchingBookmark(url, bookmarkToTab, bookmarks) {
 
 /**
  * Annotate a bookmark tree node with tab status info.
- * @param {object} node - bookmark node with optional children
- * @param {Map<string, number|null>} bookmarkToTab
- * @param {number|null} activeTabId
- * @returns {object} annotated node
  */
-export function annotateNode(node, bookmarkToTab, activeTabId) {
+export function annotateNode(
+  node: BookmarkNode,
+  bookmarkToTab: Map<string, number | null>,
+  activeTabId: number | null,
+): AnnotatedBookmark {
   const tabId = bookmarkToTab.get(node.id) ?? null;
-  const result = {
+  const result: AnnotatedBookmark = {
     id: node.id,
     title: node.title,
     url: node.url,
@@ -77,14 +79,13 @@ export function annotateNode(node, bookmarkToTab, activeTabId) {
 }
 
 /**
- * Filter tabs to find "unlinked" ones (not associated with any bookmark,
- * not chrome:// or extension pages).
- * @param {Array<{id: number, url?: string, title?: string, favIconUrl?: string}>} allTabs
- * @param {Map<number, string>} tabToBookmark
- * @param {number|null} activeTabId
- * @returns {Array<object>}
+ * Filter tabs to find "unlinked" ones (not bookmarked, not chrome:// pages).
  */
-export function getUnlinkedTabs(allTabs, tabToBookmark, activeTabId) {
+export function getUnlinkedTabs(
+  allTabs: TabInfo[],
+  tabToBookmark: Map<number, string>,
+  activeTabId: number | null,
+): UnlinkedTab[] {
   return allTabs
     .filter((t) => !tabToBookmark.has(t.id))
     .filter((t) => !t.url?.startsWith("chrome://"))
@@ -100,12 +101,10 @@ export function getUnlinkedTabs(allTabs, tabToBookmark, activeTabId) {
 
 /**
  * Flatten a bookmark tree into a list of nodes.
- * @param {object} rootNode - the root node (its children are walked)
- * @returns {Array<object>}
  */
-export function flattenBookmarkTree(rootNode) {
-  const results = [];
-  function walk(node) {
+export function flattenBookmarkTree(rootNode: BookmarkNode): BookmarkNode[] {
+  const results: BookmarkNode[] = [];
+  function walk(node: BookmarkNode): void {
     results.push(node);
     if (node.children) {
       for (const child of node.children) {
@@ -122,15 +121,16 @@ export function flattenBookmarkTree(rootNode) {
 }
 
 /**
- * Check if a bookmark ID is under a root folder, given a parentId lookup function.
- * @param {string} bookmarkId
- * @param {string} rootFolderId
- * @param {function(string): string|null} getParentId - returns parentId or null
- * @param {number} [maxDepth=20]
- * @returns {boolean}
+ * Check if a bookmark ID is under a root folder.
+ * Uses a parentId lookup function to avoid depending on Chrome APIs directly.
  */
-export function isUnderRoot(bookmarkId, rootFolderId, getParentId, maxDepth = 20) {
-  let current = bookmarkId;
+export function isUnderRoot(
+  bookmarkId: string,
+  rootFolderId: string,
+  getParentId: (id: string) => string | null,
+  maxDepth = 20,
+): boolean {
+  let current: string | null = bookmarkId;
   let depth = 0;
   while (current && depth < maxDepth) {
     if (current === rootFolderId) return true;

@@ -1,0 +1,18 @@
+{
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "test": "deno test test/",
+    "check": "deno check src/**/*.ts",
+    "build": "deno run -A build.ts",
+    "dev": "deno run -A build.ts --watch",
+    "fmt": "deno fmt src/ test/",
+    "lint": "deno lint src/ test/"
+  },
+  "fmt": {
+    "lineWidth": 100,
+    "semiColons": true
+  },
+  "compilerOptions": {
+    "strict": true
+  }
+}
