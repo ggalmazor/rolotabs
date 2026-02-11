@@ -14,6 +14,13 @@ Rolotabs is a Chrome extension (Manifest V3) that reimagines bookmarks as a pers
 - **`test/`** — Tests using Node's built-in test runner (`node:test`)
 - **`manifest.json`** — Manifest V3 definition. Permissions: bookmarks, tabs, sidePanel, favicon, storage.
 
+## Versioning
+
+- **Canonical version:** `manifest.json` → `"version"` field
+- **Changelog:** `CHANGELOG.md` (Keep a Changelog format)
+- Bump the version in `manifest.json` when releasing. Update `CHANGELOG.md` in the same commit.
+- Use semver: patch for bugfixes, minor for features, major for breaking changes.
+
 ## Key design decisions
 
 - **Bookmarks as source of truth** — no sync layer, no IndexedDB; Chrome bookmark sync handles cross-device.
