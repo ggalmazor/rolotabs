@@ -48,22 +48,22 @@ body {
   padding: 0 8px;
 }
 
-.zone-scrollable {
+.zone-unlinked {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 0;
 }
 
-.zone-scrollable::-webkit-scrollbar {
+.zone-unlinked::-webkit-scrollbar {
   width: 4px;
 }
 
-.zone-scrollable::-webkit-scrollbar-track {
+.zone-unlinked::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.zone-scrollable::-webkit-scrollbar-thumb {
+.zone-unlinked::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
 }

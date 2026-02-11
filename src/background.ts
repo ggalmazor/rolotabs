@@ -168,6 +168,11 @@ async function tryAssociateTab(tab: chrome.tabs.Tab): Promise<void> {
 
 chrome.bookmarks.onCreated.addListener(async (id, bookmark) => {
   if (await isUnderRoot(id)) {
+    // Skip if already associated (e.g. by promoteTab handler)
+    if (bookmarkToTab.has(id)) {
+      await notifySidePanel();
+      return;
+    }
     if (bookmark.url) {
       bookmarkToTab.set(id, null);
       const tabs = await chrome.tabs.query({});

@@ -235,7 +235,7 @@ function renderUnlinked(unlinked: UnlinkedTab[]): void {
     return;
   }
 
-  section.style.display = "block";
+  section.style.display = "";
 
   for (const tab of unlinked) {
     const el = document.createElement("div");
@@ -303,6 +303,7 @@ function setupDropZone(element: HTMLElement, targetFolderId: string): void {
 
   element.addEventListener("drop", async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     element.classList.remove("drag-over");
 
     const raw = e.dataTransfer!.getData("application/rolotabs");
