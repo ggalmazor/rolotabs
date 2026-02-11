@@ -501,6 +501,59 @@ body.is-dragging .empty-state {
   border-color: var(--input-border-focus);
 }
 
+/* ----- Confirmation toast ----- */
+
+.confirm-toast {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--menu-border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px var(--menu-shadow);
+  z-index: 200;
+  font-size: 12px;
+}
+
+.confirm-toast-text {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.confirm-toast-btn {
+  background: none;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 3px 10px;
+}
+
+.confirm-toast-btn:hover {
+  background: var(--bg-hover);
+}
+
+.confirm-toast-confirm {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.confirm-toast-confirm:hover {
+  opacity: 0.9;
+  background: var(--accent);
+}
+
+.confirm-toast-cancel {
+  color: var(--text-secondary);
+}
+
 /* ----- Empty states ----- */
 
 .empty-state {

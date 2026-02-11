@@ -55,12 +55,15 @@ async function init(): Promise<void> {
   });
 
   // Clear all open tabs button
-  document.getElementById("clear-open-tabs-btn")!.addEventListener("click", async () => {
+  document.getElementById("clear-open-tabs-btn")!.addEventListener("click", () => {
     if (!state?.openTabs.length) return;
-    for (const tab of state.openTabs) {
-      await sendMessage({ type: "closeOpenTab", tabId: tab.tabId });
-    }
-    await refreshState();
+    const count = state.openTabs.length;
+    showConfirmToast(`Close ${count} tab${count > 1 ? "s" : ""}?`, async () => {
+      for (const tab of state!.openTabs) {
+        await sendMessage({ type: "closeOpenTab", tabId: tab.tabId });
+      }
+      await refreshState();
+    });
   });
 
   state = await sendMessage({ type: "getState" }) as PanelState;
@@ -436,35 +439,42 @@ function onOpenTabContext(event: MouseEvent, tab: OpenTab, allTabs: OpenTab[]): 
       label: "Close all above",
       icon: "↑",
       danger: true,
-      action: async () => {
-        for (const t of allTabs.slice(0, idx)) {
-          await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
-        }
-        await refreshState();
+      action: () => {
+        const targets = allTabs.slice(0, idx);
+        showConfirmToast(`Close ${targets.length} tab${targets.length > 1 ? "s" : ""} above?`, async () => {
+          for (const t of targets) {
+            await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
+          }
+          await refreshState();
+        });
       },
     },
     {
       label: "Close all below",
       icon: "↓",
       danger: true,
-      action: async () => {
-        for (const t of allTabs.slice(idx + 1)) {
-          await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
-        }
-        await refreshState();
+      action: () => {
+        const targets = allTabs.slice(idx + 1);
+        showConfirmToast(`Close ${targets.length} tab${targets.length > 1 ? "s" : ""} below?`, async () => {
+          for (const t of targets) {
+            await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
+          }
+          await refreshState();
+        });
       },
     },
     {
       label: "Close other tabs",
       icon: "✕",
       danger: true,
-      action: async () => {
-        for (const t of allTabs) {
-          if (t.tabId !== tab.tabId) {
+      action: () => {
+        const targets = allTabs.filter((t) => t.tabId !== tab.tabId);
+        showConfirmToast(`Close ${targets.length} other tab${targets.length > 1 ? "s" : ""}?`, async () => {
+          for (const t of targets) {
             await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
           }
-        }
-        await refreshState();
+          await refreshState();
+        });
       },
     },
   ];
@@ -663,6 +673,60 @@ function editInPlace(
   input.addEventListener("blur", () => finish(true));
 }
 
+// ---------------------------------------------------------------------------
+// Confirmation toast
+// ---------------------------------------------------------------------------
+
+let activeToast: HTMLElement | null = null;
+let toastTimeout: number | null = null;
+
+function showConfirmToast(
+  message: string,
+  onConfirm: () => void,
+  durationMs = 4000,
+): void {
+  dismissToast();
+
+  const toast = document.createElement("div");
+  toast.className = "confirm-toast";
+
+  const text = document.createElement("span");
+  text.className = "confirm-toast-text";
+  text.textContent = message;
+
+  const confirmBtn = document.createElement("button");
+  confirmBtn.className = "confirm-toast-btn confirm-toast-confirm";
+  confirmBtn.textContent = "Yes";
+  confirmBtn.addEventListener("click", () => {
+    dismissToast();
+    onConfirm();
+  });
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className = "confirm-toast-btn confirm-toast-cancel";
+  cancelBtn.textContent = "No";
+  cancelBtn.addEventListener("click", () => dismissToast());
+
+  toast.appendChild(text);
+  toast.appendChild(confirmBtn);
+  toast.appendChild(cancelBtn);
+  document.body.appendChild(toast);
+  activeToast = toast;
+
+  toastTimeout = setTimeout(() => dismissToast(), durationMs) as unknown as number;
+}
+
+function dismissToast(): void {
+  if (activeToast) {
+    activeToast.remove();
+    activeToast = null;
+  }
+  if (toastTimeout !== null) {
+    clearTimeout(toastTimeout);
+    toastTimeout = null;
+  }
+}
+
 function toggleFolder(folderId: string): void {
   if (collapsedFolders.has(folderId)) {
     collapsedFolders.delete(folderId);
@@ -750,11 +814,11 @@ function onFolderContext(event: MouseEvent, folder: AnnotatedBookmark): void {
       action: () => {
         const hasChildren = folder.children && folder.children.length > 0;
         const msg = hasChildren
-          ? `Delete "${folder.title}" and all its contents?`
+          ? `Delete "${folder.title}" and all contents?`
           : `Delete "${folder.title}"?`;
-        if (confirm(msg)) {
+        showConfirmToast(msg, () => {
           sendMessage({ type: "removeFolder", folderId: folder.id }).then(() => refreshState());
-        }
+        });
       },
     },
   ];
