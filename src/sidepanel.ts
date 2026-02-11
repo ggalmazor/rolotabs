@@ -3,10 +3,9 @@
 // Rolotabs — Side Panel UI
 // Renders the three-zone sidebar and handles user interactions.
 
-import type { AnnotatedBookmark, FolderIds, OpenTab, PanelState } from "./lib/types.ts";
+import type { AnnotatedBookmark, OpenTab, PanelState } from "./lib/types.ts";
 
 let state: PanelState | null = null;
-let folderIds: FolderIds | null = null;
 let collapsedFolders = new Set<string>();
 
 // ---------------------------------------------------------------------------
@@ -14,8 +13,6 @@ let collapsedFolders = new Set<string>();
 // ---------------------------------------------------------------------------
 
 async function init(): Promise<void> {
-  folderIds = await sendMessage({ type: "getFolderIds" }) as FolderIds;
-
   const stored = await chrome.storage.local.get("collapsedFolders");
   if (stored.collapsedFolders) {
     collapsedFolders = new Set(stored.collapsedFolders as string[]);
@@ -47,7 +44,7 @@ function sendMessage(message: { type: string; [key: string]: unknown }): Promise
 function render(): void {
   if (!state) return;
   renderPinned(state.pinned);
-  renderTabs(state.tabs);
+  renderBookmarks(state.bookmarks);
   renderOpenTabs(state.openTabs);
 }
 
@@ -59,7 +56,7 @@ function renderPinned(pinned: AnnotatedBookmark[]): void {
 
   if (pinned.length === 0) {
     grid.innerHTML = '<div class="pinned-grid-empty">Drag tabs here to pin</div>';
-    setupDropZone(grid, folderIds!.pinnedFolderId);
+    setupDropZone(grid, "pinned");
     return;
   }
 
@@ -88,7 +85,7 @@ function renderPinned(pinned: AnnotatedBookmark[]): void {
     el.addEventListener("click", () => activateBookmark(item.id));
     el.addEventListener("contextmenu", (e) => {
       e.preventDefault();
-      onBookmarkContext(e, item);
+      onPinnedContext(e, item);
     });
 
     el.draggable = true;
@@ -104,30 +101,28 @@ function renderPinned(pinned: AnnotatedBookmark[]): void {
     grid.appendChild(el);
   }
 
-  setupDropZone(grid, folderIds!.pinnedFolderId);
+  setupDropZone(grid, "pinned");
 }
 
-// ----- Zone 2: Bookmarked tabs -----
+// ----- Zone 2: All bookmarks -----
 
-function renderTabs(tabs: AnnotatedBookmark[]): void {
+function renderBookmarks(roots: AnnotatedBookmark[]): void {
   const list = document.getElementById("tabs-list")!;
   list.innerHTML = "";
 
-  if (tabs.length === 0) {
-    list.innerHTML = '<div class="empty-state">Drag tabs here to bookmark</div>';
-    setupDropZone(list, folderIds!.tabsFolderId);
-    return;
-  }
-
-  for (const item of tabs) {
-    if (item.isFolder) {
-      list.appendChild(renderFolder(item));
-    } else {
-      list.appendChild(renderTabItem(item));
+  for (const root of roots) {
+    if (root.children) {
+      for (const child of root.children) {
+        if (child.isFolder) {
+          list.appendChild(renderFolder(child));
+        } else {
+          list.appendChild(renderTabItem(child));
+        }
+      }
     }
   }
 
-  setupDropZone(list, folderIds!.tabsFolderId);
+  setupDropZone(list, "bookmarks");
 }
 
 function renderFolder(folder: AnnotatedBookmark): HTMLElement {
@@ -159,7 +154,6 @@ function renderFolder(folder: AnnotatedBookmark): HTMLElement {
     }
   }
 
-  setupDropZone(children, folder.id);
   container.appendChild(children);
 
   return container;
@@ -210,20 +204,10 @@ function renderTabItem(item: AnnotatedBookmark): HTMLElement {
     onBookmarkContext(e, item);
   });
 
-  el.draggable = true;
-  el.addEventListener("dragstart", (e) => {
-    e.dataTransfer!.setData(
-      "application/rolotabs",
-      JSON.stringify({ type: "bookmark", bookmarkId: item.id }),
-    );
-    el.classList.add("dragging");
-  });
-  el.addEventListener("dragend", () => el.classList.remove("dragging"));
-
   return el;
 }
 
-// ----- Zone 3: Open tabs -----
+// ----- Zone 3: Open tabs (not bookmarked) -----
 
 function renderOpenTabs(openTabs: OpenTab[]): void {
   const list = document.getElementById("unlinked-list")!;
@@ -237,7 +221,6 @@ function renderOpenTabs(openTabs: OpenTab[]): void {
     const el = document.createElement("div");
     el.className = "tab-item is-loaded";
     if (tab.isActive) el.classList.add("is-active");
-    if (tab.isBookmarked) el.classList.add("is-bookmarked");
     el.dataset.tabId = String(tab.tabId);
 
     const img = document.createElement("img");
@@ -269,18 +252,15 @@ function renderOpenTabs(openTabs: OpenTab[]): void {
       closeOpenTab(tab.tabId);
     });
 
-    // Only allow dragging unbookmarked tabs (bookmarked ones are already in zone 2)
-    if (!tab.isBookmarked) {
-      el.draggable = true;
-      el.addEventListener("dragstart", (e) => {
-        e.dataTransfer!.setData(
-          "application/rolotabs",
-          JSON.stringify({ type: "unlinked", tabId: tab.tabId }),
-        );
-        el.classList.add("dragging");
-      });
-      el.addEventListener("dragend", () => el.classList.remove("dragging"));
-    }
+    el.draggable = true;
+    el.addEventListener("dragstart", (e) => {
+      e.dataTransfer!.setData(
+        "application/rolotabs",
+        JSON.stringify({ type: "openTab", tabId: tab.tabId }),
+      );
+      el.classList.add("dragging");
+    });
+    el.addEventListener("dragend", () => el.classList.remove("dragging"));
 
     list.appendChild(el);
   }
@@ -290,14 +270,13 @@ function renderOpenTabs(openTabs: OpenTab[]): void {
 // Drag & drop
 // ---------------------------------------------------------------------------
 
-function setupDropZone(element: HTMLElement, targetFolderId: string): void {
-  // Prevent stacking listeners on re-render
+function setupDropZone(element: HTMLElement, zone: "pinned" | "bookmarks"): void {
   if (element.dataset.dropZone) {
-    element.dataset.dropTarget = targetFolderId;
+    element.dataset.dropTarget = zone;
     return;
   }
   element.dataset.dropZone = "true";
-  element.dataset.dropTarget = targetFolderId;
+  element.dataset.dropTarget = zone;
 
   element.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -318,20 +297,21 @@ function setupDropZone(element: HTMLElement, targetFolderId: string): void {
     if (!raw) return;
 
     const data = JSON.parse(raw);
-    const currentTarget = element.dataset.dropTarget!;
+    const target = element.dataset.dropTarget!;
 
-    if (data.type === "unlinked") {
+    if (data.type === "openTab") {
+      // Promote: create bookmark from open tab
       await sendMessage({
         type: "promoteTab",
         tabId: data.tabId,
-        targetFolderId: currentTarget,
+        pinned: target === "pinned",
       });
     } else if (data.type === "bookmark") {
-      await sendMessage({
-        type: "moveBookmark",
-        bookmarkId: data.bookmarkId,
-        targetFolderId: currentTarget,
-      });
+      if (target === "pinned") {
+        await sendMessage({ type: "pinBookmark", bookmarkId: data.bookmarkId });
+      } else {
+        await sendMessage({ type: "unpinBookmark", bookmarkId: data.bookmarkId });
+      }
     }
 
     await refreshState();
@@ -348,7 +328,7 @@ async function activateBookmark(bookmarkId: string): Promise<void> {
 }
 
 async function activateOpenTab(tabId: number): Promise<void> {
-  state = await sendMessage({ type: "activateUnlinkedTab", tabId }) as PanelState;
+  state = await sendMessage({ type: "activateOpenTab", tabId }) as PanelState;
   render();
 }
 
@@ -358,7 +338,7 @@ async function closeBookmarkTab(bookmarkId: string): Promise<void> {
 }
 
 async function closeOpenTab(tabId: number): Promise<void> {
-  state = await sendMessage({ type: "closeUnlinkedTab", tabId }) as PanelState;
+  state = await sendMessage({ type: "closeOpenTab", tabId }) as PanelState;
   render();
 }
 
@@ -380,17 +360,29 @@ function toggleFolder(folderId: string): void {
 }
 
 // ---------------------------------------------------------------------------
-// Context menu
+// Context menus
 // ---------------------------------------------------------------------------
+
+function onPinnedContext(_event: MouseEvent, item: AnnotatedBookmark): void {
+  const action = prompt(
+    `${item.title}\n\nActions:\n1 — Unpin\n2 — Remove bookmark\n\nEnter number:`,
+  );
+  if (action === "1") {
+    sendMessage({ type: "unpinBookmark", bookmarkId: item.id }).then(() => refreshState());
+  } else if (action === "2") {
+    removeBookmark(item.id);
+  }
+}
 
 function onBookmarkContext(_event: MouseEvent, item: AnnotatedBookmark): void {
   const action = prompt(
-    `${item.title}\n\nActions:\n1 — Remove bookmark\n2 — Rename\n\nEnter number:`,
+    `${item.title}\n\nActions:\n1 — Pin to top\n2 — Remove bookmark\n3 — Rename\n\nEnter number:`,
   );
-
   if (action === "1") {
-    removeBookmark(item.id);
+    sendMessage({ type: "pinBookmark", bookmarkId: item.id }).then(() => refreshState());
   } else if (action === "2") {
+    removeBookmark(item.id);
+  } else if (action === "3") {
     const newTitle = prompt("New name:", item.title);
     if (newTitle && newTitle !== item.title) {
       chrome.bookmarks.update(item.id, { title: newTitle });
@@ -406,7 +398,7 @@ function onBookmarkContext(_event: MouseEvent, item: AnnotatedBookmark): void {
 function faviconUrl(url?: string): string {
   if (!url) return "icons/icon16.png";
   try {
-    new URL(url); // validate
+    new URL(url);
     return `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`;
   } catch {
     return "icons/icon16.png";

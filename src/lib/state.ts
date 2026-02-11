@@ -123,6 +123,42 @@ export function flattenBookmarkTree(rootNode: BookmarkNode): BookmarkNode[] {
 }
 
 /**
+ * Given a list of pinned bookmark IDs and a flat list of annotated bookmarks,
+ * return the pinned items in the order of pinnedIds.
+ */
+export function getPinnedBookmarks(
+  pinnedIds: string[],
+  allAnnotated: AnnotatedBookmark[],
+): AnnotatedBookmark[] {
+  const map = new Map<string, AnnotatedBookmark>();
+  for (const bm of allAnnotated) {
+    map.set(bm.id, bm);
+  }
+  return pinnedIds
+    .map((id) => map.get(id))
+    .filter((bm): bm is AnnotatedBookmark => bm != null);
+}
+
+/**
+ * Remove pinned bookmark IDs from an annotated bookmark tree.
+ * Returns a new tree with pinned leaf nodes removed.
+ * Empty folders that result from removal are kept.
+ */
+export function filterPinnedFromTree(
+  nodes: AnnotatedBookmark[],
+  pinnedIds: Set<string>,
+): AnnotatedBookmark[] {
+  return nodes
+    .filter((node) => !pinnedIds.has(node.id) || node.isFolder)
+    .map((node) => {
+      if (node.children) {
+        return { ...node, children: filterPinnedFromTree(node.children, pinnedIds) };
+      }
+      return node;
+    });
+}
+
+/**
  * Check if a bookmark ID is under a root folder.
  * Uses a parentId lookup function to avoid depending on Chrome APIs directly.
  */

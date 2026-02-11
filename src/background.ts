@@ -1,35 +1,30 @@
 /// <reference types="npm:chrome-types" />
 
 // Rolotabs — Background Service Worker
-// Manages the bookmark folder structure, tab↔bookmark associations, and events.
+// Manages tab↔bookmark associations using the browser's full bookmark tree.
+// Pinned bookmarks are tracked in chrome.storage.local.
 
 import { urlsMatch } from "./lib/urls.ts";
-import { annotateNode, flattenBookmarkTree, getOpenTabs } from "./lib/state.ts";
+import {
+  annotateNode,
+  filterPinnedFromTree,
+  flattenBookmarkTree,
+  getOpenTabs,
+  getPinnedBookmarks,
+} from "./lib/state.ts";
 import type { BookmarkNode } from "./lib/types.ts";
-
-const ROOT_FOLDER_NAME = "Rolotabs";
-const PINNED_FOLDER_NAME = "Pinned";
-const TABS_FOLDER_NAME = "Tabs";
 
 // In-memory state: bookmarkId → tabId (or null if unloaded)
 const bookmarkToTab = new Map<string, number | null>();
 // Reverse map: tabId → bookmarkId
 const tabToBookmark = new Map<number, string>();
 
-// Folder IDs (populated on startup)
-let rootFolderId: string | null = null;
-let pinnedFolderId: string | null = null;
-let tabsFolderId: string | null = null;
+// Pinned bookmark IDs (ordered), loaded from storage
+let pinnedIds: string[] = [];
 
 // ---------------------------------------------------------------------------
 // Initialization
 // ---------------------------------------------------------------------------
-
-chrome.runtime.onInstalled.addListener(async (details) => {
-  if (details.reason === "install") {
-    await ensureFolderStructure();
-  }
-});
 
 chrome.runtime.onStartup.addListener(async () => {
   await init();
@@ -39,41 +34,18 @@ chrome.runtime.onStartup.addListener(async () => {
 init();
 
 async function init(): Promise<void> {
-  await ensureFolderStructure();
+  await loadPinnedIds();
   await rebuildAssociations();
   await notifySidePanel();
 }
 
-// ---------------------------------------------------------------------------
-// Folder structure
-// ---------------------------------------------------------------------------
-
-async function ensureFolderStructure(): Promise<void> {
-  const tree = await chrome.bookmarks.getTree();
-  const otherBookmarks = tree[0].children!.find(
-    (n) => n.title === "Other Bookmarks" || n.title === "Other bookmarks"
-  );
-  if (!otherBookmarks) {
-    // Fallback: use the second root child (index 1 is typically "Other Bookmarks")
-    const root = tree[0].children![1];
-    rootFolderId = await findOrCreateFolder(root.id, ROOT_FOLDER_NAME);
-  } else {
-    rootFolderId = await findOrCreateFolder(otherBookmarks.id, ROOT_FOLDER_NAME);
-  }
-
-  pinnedFolderId = await findOrCreateFolder(rootFolderId, PINNED_FOLDER_NAME);
-  tabsFolderId = await findOrCreateFolder(rootFolderId, TABS_FOLDER_NAME);
+async function loadPinnedIds(): Promise<void> {
+  const stored = await chrome.storage.local.get("pinnedIds");
+  pinnedIds = (stored.pinnedIds as string[]) ?? [];
 }
 
-async function findOrCreateFolder(parentId: string, title: string): Promise<string> {
-  const children = await chrome.bookmarks.getChildren(parentId);
-  const existing = children.find(
-    (c) => c.title === title && c.url === undefined
-  );
-  if (existing) return existing.id;
-
-  const created = await chrome.bookmarks.create({ parentId, title });
-  return created.id;
+async function savePinnedIds(): Promise<void> {
+  await chrome.storage.local.set({ pinnedIds });
 }
 
 // ---------------------------------------------------------------------------
@@ -84,10 +56,10 @@ async function rebuildAssociations(): Promise<void> {
   bookmarkToTab.clear();
   tabToBookmark.clear();
 
-  const bookmarks = await getAllBookmarks();
+  const allBookmarks = await getAllBookmarks();
   const tabs = await chrome.tabs.query({});
 
-  for (const bm of bookmarks) {
+  for (const bm of allBookmarks) {
     if (!bm.url) continue;
 
     const matchingTab = tabs.find((t) => urlsMatch(t.url, bm.url) && !tabToBookmark.has(t.id!));
@@ -101,8 +73,8 @@ async function rebuildAssociations(): Promise<void> {
 }
 
 async function getAllBookmarks(): Promise<BookmarkNode[]> {
-  const subtree = await chrome.bookmarks.getSubTree(rootFolderId!);
-  return flattenBookmarkTree(subtree[0] as BookmarkNode);
+  const tree = await chrome.bookmarks.getTree();
+  return flattenBookmarkTree(tree[0] as BookmarkNode);
 }
 
 // ---------------------------------------------------------------------------
@@ -167,23 +139,20 @@ async function tryAssociateTab(tab: chrome.tabs.Tab): Promise<void> {
 // ---------------------------------------------------------------------------
 
 chrome.bookmarks.onCreated.addListener(async (id, bookmark) => {
-  if (await isUnderRoot(id)) {
-    // Skip if already associated (e.g. by promoteTab handler)
-    if (bookmarkToTab.has(id)) {
-      await notifySidePanel();
-      return;
-    }
-    if (bookmark.url) {
-      bookmarkToTab.set(id, null);
-      const tabs = await chrome.tabs.query({});
-      const match = tabs.find((t) => urlsMatch(t.url, bookmark.url));
-      if (match && !tabToBookmark.has(match.id!)) {
-        bookmarkToTab.set(id, match.id!);
-        tabToBookmark.set(match.id!, id);
-      }
-    }
+  if (bookmarkToTab.has(id)) {
     await notifySidePanel();
+    return;
   }
+  if (bookmark.url) {
+    bookmarkToTab.set(id, null);
+    const tabs = await chrome.tabs.query({});
+    const match = tabs.find((t) => urlsMatch(t.url, bookmark.url));
+    if (match && !tabToBookmark.has(match.id!)) {
+      bookmarkToTab.set(id, match.id!);
+      tabToBookmark.set(match.id!, id);
+    }
+  }
+  await notifySidePanel();
 });
 
 chrome.bookmarks.onRemoved.addListener(async (id, _removeInfo) => {
@@ -194,50 +163,35 @@ chrome.bookmarks.onRemoved.addListener(async (id, _removeInfo) => {
       tabToBookmark.delete(tabId);
     }
   }
+  // Remove from pinned if it was there
+  const idx = pinnedIds.indexOf(id);
+  if (idx !== -1) {
+    pinnedIds.splice(idx, 1);
+    await savePinnedIds();
+  }
   await notifySidePanel();
 });
 
 chrome.bookmarks.onMoved.addListener(async () => {
-  await rebuildAssociations();
   await notifySidePanel();
 });
 
 chrome.bookmarks.onChanged.addListener(async (id, changeInfo) => {
-  if (await isUnderRoot(id)) {
-    if (changeInfo.url) {
-      const oldTabId = bookmarkToTab.get(id);
-      if (oldTabId !== null && oldTabId !== undefined) {
-        tabToBookmark.delete(oldTabId);
-      }
-      bookmarkToTab.set(id, null);
-      const tabs = await chrome.tabs.query({});
-      const match = tabs.find((t) => urlsMatch(t.url, changeInfo.url));
-      if (match && !tabToBookmark.has(match.id!)) {
-        bookmarkToTab.set(id, match.id!);
-        tabToBookmark.set(match.id!, id);
-      }
+  if (changeInfo.url) {
+    const oldTabId = bookmarkToTab.get(id);
+    if (oldTabId !== null && oldTabId !== undefined) {
+      tabToBookmark.delete(oldTabId);
     }
-    await notifySidePanel();
+    bookmarkToTab.set(id, null);
+    const tabs = await chrome.tabs.query({});
+    const match = tabs.find((t) => urlsMatch(t.url, changeInfo.url));
+    if (match && !tabToBookmark.has(match.id!)) {
+      bookmarkToTab.set(id, match.id!);
+      tabToBookmark.set(match.id!, id);
+    }
   }
+  await notifySidePanel();
 });
-
-async function isUnderRoot(bookmarkId: string): Promise<boolean> {
-  if (!rootFolderId) return false;
-  try {
-    let current: string = bookmarkId;
-    let depth = 0;
-    while (depth < 20) {
-      if (current === rootFolderId) return true;
-      const [node] = await chrome.bookmarks.get(current);
-      if (!node.parentId || node.parentId === "0") return false;
-      current = node.parentId;
-      depth++;
-    }
-  } catch {
-    return false;
-  }
-  return false;
-}
 
 // ---------------------------------------------------------------------------
 // Side panel communication
@@ -278,7 +232,7 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       return await getFullState();
     }
 
-    case "activateUnlinkedTab": {
+    case "activateOpenTab": {
       const tabId = message.tabId as number;
       await chrome.tabs.update(tabId, { active: true });
       const tab = await chrome.tabs.get(tabId);
@@ -297,36 +251,45 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       return await getFullState();
     }
 
-    case "closeUnlinkedTab": {
+    case "closeOpenTab": {
       const tabId = message.tabId as number;
       await chrome.tabs.remove(tabId);
       return await getFullState();
     }
 
-    case "promoteTab": {
-      const tabId = message.tabId as number;
-      const targetFolderId = message.targetFolderId as string;
-      const index = message.index as number | undefined;
-      const tab = await chrome.tabs.get(tabId);
-      const bm = await chrome.bookmarks.create({
-        parentId: targetFolderId,
-        title: tab.title || tab.url,
-        url: tab.url,
-        index,
-      });
-      bookmarkToTab.set(bm.id, tabId);
-      tabToBookmark.set(tabId, bm.id);
+    case "pinBookmark": {
+      const bookmarkId = message.bookmarkId as string;
+      if (!pinnedIds.includes(bookmarkId)) {
+        pinnedIds.push(bookmarkId);
+        await savePinnedIds();
+      }
       return await getFullState();
     }
 
-    case "moveBookmark": {
+    case "unpinBookmark": {
       const bookmarkId = message.bookmarkId as string;
-      const targetFolderId = message.targetFolderId as string;
-      const index = message.index as number | undefined;
-      await chrome.bookmarks.move(bookmarkId, {
-        parentId: targetFolderId,
-        index,
+      const idx = pinnedIds.indexOf(bookmarkId);
+      if (idx !== -1) {
+        pinnedIds.splice(idx, 1);
+        await savePinnedIds();
+      }
+      return await getFullState();
+    }
+
+    case "promoteTab": {
+      // Create a bookmark from an open tab
+      const tabId = message.tabId as number;
+      const tab = await chrome.tabs.get(tabId);
+      const bm = await chrome.bookmarks.create({
+        title: tab.title || tab.url,
+        url: tab.url,
       });
+      bookmarkToTab.set(bm.id, tabId);
+      tabToBookmark.set(tabId, bm.id);
+      if (message.pinned) {
+        pinnedIds.push(bm.id);
+        await savePinnedIds();
+      }
       return await getFullState();
     }
 
@@ -337,30 +300,27 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       if (tabId) {
         tabToBookmark.delete(tabId);
       }
+      const idx = pinnedIds.indexOf(bookmarkId);
+      if (idx !== -1) {
+        pinnedIds.splice(idx, 1);
+        await savePinnedIds();
+      }
       await chrome.bookmarks.remove(bookmarkId);
       return await getFullState();
     }
 
-    case "createFolder": {
-      const parentId = message.parentId as string;
-      const title = message.title as string;
-      await chrome.bookmarks.create({ parentId, title });
-      return await getFullState();
-    }
-
-    case "getFolderIds":
-      return { rootFolderId, pinnedFolderId, tabsFolderId };
+    case "getPinnedIds":
+      return pinnedIds;
 
     default:
       return null;
   }
 }
 
+// Build the full state object for the side panel
 async function getFullState() {
-  if (!rootFolderId) await init();
-
-  const pinnedTree = await chrome.bookmarks.getSubTree(pinnedFolderId!);
-  const tabsTree = await chrome.bookmarks.getSubTree(tabsFolderId!);
+  const tree = await chrome.bookmarks.getTree();
+  const rootChildren = tree[0].children ?? [];
 
   const allTabs = await chrome.tabs.query({});
   const [activeTabInfo] = await chrome.tabs.query({
@@ -369,13 +329,37 @@ async function getFullState() {
   });
   const activeTabId = activeTabInfo?.id ?? null;
 
-  const pinned = pinnedTree[0].children?.map((n) =>
+  // Annotate the full bookmark tree
+  const annotatedRoots = rootChildren.map((n) =>
     annotateNode(n as BookmarkNode, bookmarkToTab, activeTabId)
-  ) ?? [];
-  const tabs = tabsTree[0].children?.map((n) =>
-    annotateNode(n as BookmarkNode, bookmarkToTab, activeTabId)
-  ) ?? [];
+  );
 
+  // Flatten for pinned lookup
+  const allAnnotatedFlat = annotatedRoots.flatMap((root) => {
+    const flat = [root];
+    function walk(node: typeof root) {
+      if (node.children) {
+        for (const c of node.children) {
+          flat.push(c);
+          walk(c);
+        }
+      }
+    }
+    walk(root);
+    return flat;
+  });
+
+  // Zone 1: pinned bookmarks (ordered by pinnedIds)
+  const pinned = getPinnedBookmarks(pinnedIds, allAnnotatedFlat);
+
+  // Zone 2: full bookmark tree minus pinned items
+  const pinnedSet = new Set(pinnedIds);
+  const bookmarks = annotatedRoots.map((root) => ({
+    ...root,
+    children: root.children ? filterPinnedFromTree(root.children, pinnedSet) : undefined,
+  }));
+
+  // Zone 3: open tabs not matching any bookmark
   const openTabs = getOpenTabs(
     allTabs.map((t) => ({ id: t.id!, url: t.url, title: t.title, favIconUrl: t.favIconUrl })),
     tabToBookmark,
@@ -384,10 +368,10 @@ async function getFullState() {
 
   return {
     pinned,
-    tabs,
+    bookmarks,
     openTabs,
     activeTabId,
-    folderIds: { rootFolderId, pinnedFolderId, tabsFolderId },
+    pinnedIds,
   };
 }
 

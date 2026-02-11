@@ -30,7 +30,7 @@ export interface AnnotatedBookmark {
   children?: AnnotatedBookmark[];
 }
 
-/** An open tab shown in zone 3. */
+/** An open tab shown in zone 3 (not matching any bookmark). */
 export interface OpenTab {
   tabId: number;
   title?: string;
@@ -46,18 +46,11 @@ export interface Associations {
   tabToBookmark: Map<number, string>;
 }
 
-/** Folder IDs for the Rolotabs bookmark structure. */
-export interface FolderIds {
-  rootFolderId: string;
-  pinnedFolderId: string;
-  tabsFolderId: string;
-}
-
 /** Full state sent from background to side panel. */
 export interface PanelState {
   pinned: AnnotatedBookmark[];
-  tabs: AnnotatedBookmark[];
+  bookmarks: AnnotatedBookmark[];
   openTabs: OpenTab[];
   activeTabId: number | null;
-  folderIds: FolderIds;
+  pinnedIds: string[];
 }
