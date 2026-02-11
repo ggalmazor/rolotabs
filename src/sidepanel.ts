@@ -5,7 +5,7 @@
 
 import type { AnnotatedBookmark, OpenTab, PanelState } from "./lib/types.ts";
 import { showContextMenu, type MenuEntry } from "./lib/context-menu.ts";
-import { showDropIndicator, showGridDropIndicator, hideDropIndicator } from "./lib/drop-indicator.ts";
+import { showDropIndicator, showGridDropIndicator, hideDropIndicator, showFolderDropGhost, showDangerDropGhost } from "./lib/drop-indicator.ts";
 
 let state: PanelState | null = null;
 let collapsedFolders = new Set<string>();
@@ -30,12 +30,8 @@ async function init(): Promise<void> {
     // Track if dragging an unloaded bookmark (for danger styling on zone 3)
     const bmId = target.dataset?.bookmarkId;
     const isLoaded = target.classList.contains("is-loaded");
-    const hint = document.querySelector(".zone-drop-hint") as HTMLElement;
     if (bmId && !isLoaded) {
       document.body.classList.add("is-dragging-inactive");
-      if (hint) hint.textContent = "🗑";
-    } else {
-      if (hint) hint.textContent = "";
     }
   });
   document.addEventListener("dragend", () => {
@@ -212,15 +208,17 @@ function renderFolder(folder: AnnotatedBookmark): HTMLElement {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer!.dropEffect = "move";
-    header.classList.add("drag-over");
+    showFolderDropGhost(header);
   });
-  header.addEventListener("dragleave", () => {
-    header.classList.remove("drag-over");
+  header.addEventListener("dragleave", (e) => {
+    if (!header.contains(e.relatedTarget as Node)) {
+      hideDropIndicator();
+    }
   });
   header.addEventListener("drop", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    header.classList.remove("drag-over");
+    hideDropIndicator();
     await handleDropOnFolder(e, folder.id);
   });
 
@@ -372,23 +370,26 @@ function setupUnbookmarkDropZone(element: HTMLElement): void {
   element.dataset.dropZone = "true";
 
   element.addEventListener("dragover", (e) => {
-    // Don't accept drops from zone 3 items (they go to zone 1/2)
     if (document.body.classList.contains("is-dragging-from-zone3")) return;
     const raw = e.dataTransfer!.types.includes("application/rolotabs");
     if (!raw) return;
     e.preventDefault();
     e.dataTransfer!.dropEffect = "move";
-    element.classList.add("drag-over");
+    if (document.body.classList.contains("is-dragging-inactive")) {
+      showDangerDropGhost(element, "🗑");
+    }
   });
 
-  element.addEventListener("dragleave", () => {
-    element.classList.remove("drag-over");
+  element.addEventListener("dragleave", (e) => {
+    if (!element.contains(e.relatedTarget as Node)) {
+      hideDropIndicator();
+    }
   });
 
   element.addEventListener("drop", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    element.classList.remove("drag-over");
+    hideDropIndicator();
 
     const raw = e.dataTransfer!.getData("application/rolotabs");
     if (!raw) return;

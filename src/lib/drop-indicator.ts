@@ -1,75 +1,84 @@
 /**
- * Lightweight drop indicator for reordering items in a list.
- * Shows a horizontal line between items to indicate where the drop will land.
+ * Drop ghost indicator — shows a translucent preview of the dragged item
+ * at the insertion point.
  */
 
-let indicator: HTMLElement | null = null;
+let ghost: HTMLElement | null = null;
 
-function getIndicator(): HTMLElement {
-  if (!indicator) {
-    indicator = document.createElement("div");
-    indicator.className = "drop-indicator";
-    indicator.style.display = "none";
-    document.body.appendChild(indicator);
+function getGhost(): HTMLElement {
+  if (!ghost) {
+    ghost = document.createElement("div");
+    ghost.className = "drop-ghost";
+    ghost.style.display = "none";
   }
-  return indicator;
+  return ghost;
 }
 
-/** Show the drop indicator between items. */
-export function showDropIndicator(container: HTMLElement, y: number): number {
-  const ind = getIndicator();
+/** Remove ghost from its current parent. */
+function detachGhost(): void {
+  if (ghost?.parentElement) {
+    ghost.remove();
+  }
+}
+
+/**
+ * Show a ghost element at the drop position within a list container.
+ * Returns the insertion index.
+ */
+export function showDropIndicator(container: HTMLElement, y: number, label?: string): number {
+  const g = getGhost();
+  detachGhost();
+  g.textContent = label || "";
+  g.className = "drop-ghost";
+  g.style.display = "";
+
   const children = Array.from(container.children).filter(
-    (c) => !c.classList.contains("drop-indicator") && !c.classList.contains("empty-state")
+    (c) => c !== ghost && !c.classList.contains("empty-state")
   ) as HTMLElement[];
 
   if (children.length === 0) {
-    ind.style.display = "none";
+    container.appendChild(g);
     return 0;
   }
 
-  // Find which gap the cursor is closest to
   let insertIndex = children.length;
   for (let i = 0; i < children.length; i++) {
     const rect = children[i].getBoundingClientRect();
-    const midY = rect.top + rect.height / 2;
-    if (y < midY) {
+    if (y < rect.top + rect.height / 2) {
       insertIndex = i;
       break;
     }
   }
 
-  // Position the indicator — horizontal line
-  const containerRect = container.getBoundingClientRect();
-  let indicatorY: number;
   if (insertIndex < children.length) {
-    indicatorY = children[insertIndex].getBoundingClientRect().top;
+    container.insertBefore(g, children[insertIndex]);
   } else {
-    const last = children[children.length - 1].getBoundingClientRect();
-    indicatorY = last.bottom;
+    container.appendChild(g);
   }
-
-  ind.style.display = "block";
-  ind.style.left = `${containerRect.left}px`;
-  ind.style.width = `${containerRect.width}px`;
-  ind.style.top = `${indicatorY - 1}px`;
-  ind.style.height = "2px";
 
   return insertIndex;
 }
 
-/** Show the drop indicator for a grid (zone 1 pinned). */
-export function showGridDropIndicator(container: HTMLElement, x: number, y: number): number {
-  const ind = getIndicator();
+/**
+ * Show a ghost element at the drop position within a grid container.
+ * Returns the insertion index.
+ */
+export function showGridDropIndicator(container: HTMLElement, x: number, y: number, label?: string): number {
+  const g = getGhost();
+  detachGhost();
+  g.textContent = label || "";
+  g.className = "drop-ghost drop-ghost-grid";
+  g.style.display = "";
+
   const children = Array.from(container.children).filter(
-    (c) => !c.classList.contains("drop-indicator") && !c.classList.contains("pinned-grid-empty")
+    (c) => c !== ghost && !c.classList.contains("pinned-grid-empty")
   ) as HTMLElement[];
 
   if (children.length === 0) {
-    ind.style.display = "none";
+    container.appendChild(g);
     return 0;
   }
 
-  // Find closest gap in the grid
   let insertIndex = children.length;
   for (let i = 0; i < children.length; i++) {
     const rect = children[i].getBoundingClientRect();
@@ -85,32 +94,51 @@ export function showGridDropIndicator(container: HTMLElement, x: number, y: numb
     }
   }
 
-  // Position indicator as a vertical line
-  const containerRect = container.getBoundingClientRect();
   if (insertIndex < children.length) {
-    const rect = children[insertIndex].getBoundingClientRect();
-    ind.style.display = "block";
-    ind.style.left = `${rect.left - 1}px`;
-    ind.style.width = `2px`;
-    ind.style.top = `${rect.top}px`;
-    ind.style.height = `${rect.height}px`;
+    container.insertBefore(g, children[insertIndex]);
   } else {
-    const last = children[children.length - 1].getBoundingClientRect();
-    ind.style.display = "block";
-    ind.style.left = `${last.right - 1}px`;
-    ind.style.width = `2px`;
-    ind.style.top = `${last.top}px`;
-    ind.style.height = `${last.height}px`;
+    container.appendChild(g);
   }
 
   return insertIndex;
 }
 
-/** Hide the drop indicator. */
+/**
+ * Show a ghost in a folder header area (drop into folder).
+ */
+export function showFolderDropGhost(folderHeader: HTMLElement, label?: string): void {
+  const g = getGhost();
+  detachGhost();
+  g.textContent = label || "";
+  g.className = "drop-ghost drop-ghost-folder";
+  g.style.display = "";
+
+  // Insert after the folder header
+  const parent = folderHeader.parentElement!;
+  const children = parent.querySelector(".folder-children");
+  if (children) {
+    children.insertBefore(g, children.firstChild);
+  } else {
+    parent.appendChild(g);
+  }
+}
+
+/**
+ * Show a danger ghost (for delete actions).
+ */
+export function showDangerDropGhost(container: HTMLElement, label?: string): void {
+  const g = getGhost();
+  detachGhost();
+  g.textContent = label || "🗑";
+  g.className = "drop-ghost drop-ghost-danger";
+  g.style.display = "";
+  container.appendChild(g);
+}
+
+/** Hide and detach the ghost. */
 export function hideDropIndicator(): void {
-  if (indicator) {
-    indicator.style.display = "none";
-    indicator.style.height = "2px";
-    indicator.style.width = "";
+  if (ghost) {
+    ghost.style.display = "none";
+    detachGhost();
   }
 }

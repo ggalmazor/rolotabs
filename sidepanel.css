@@ -84,42 +84,6 @@ body.is-dragging .zone-unlinked.is-empty .zone-header {
   display: block;
 }
 
-body.is-dragging:not(.is-dragging-from-zone3) .zone-unlinked .zone-drop-hint {
-  display: block;
-}
-
-.zone-drop-hint {
-  display: none;
-  padding: 8px;
-  text-align: center;
-  color: var(--text-dim);
-  font-size: 20px;
-}
-
-/* Zone 1/2 drag-over highlight */
-#pinned-grid.drag-over,
-#tabs-list.drag-over {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius);
-}
-
-/* Zone 3 drag-over: accent for active tabs, danger for inactive */
-body.is-dragging .zone-unlinked.drag-over {
-  border-radius: var(--radius);
-}
-
-body.is-dragging:not(.is-dragging-inactive) .zone-unlinked.drag-over {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-body.is-dragging.is-dragging-inactive .zone-unlinked.drag-over {
-  background: var(--accent-soft);
-}
-
-body.is-dragging.is-dragging-inactive .zone-unlinked.drag-over .zone-drop-hint {
-  color: var(--accent);
-}
-
 .zone-unlinked::-webkit-scrollbar {
   width: 4px;
 }
@@ -325,10 +289,6 @@ body.is-dragging.is-dragging-inactive .zone-unlinked.drag-over .zone-drop-hint {
   background: var(--bg-hover);
 }
 
-.folder-header.drag-over {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-sm);
-}
 
 .folder-arrow {
   font-size: 10px;
@@ -358,15 +318,6 @@ body.is-dragging.is-dragging-inactive .zone-unlinked.drag-over .zone-drop-hint {
 
 /* ----- Drag and drop ----- */
 
-.tab-item.drag-over {
-  border-top: 2px solid var(--accent);
-  margin-top: -2px;
-}
-
-.zone.drag-over {
-  background: var(--accent-soft);
-  border-radius: var(--radius);
-}
 
 .tab-item.dragging {
   opacity: 0.4;
@@ -425,16 +376,41 @@ body.is-dragging.is-dragging-inactive .zone-unlinked.drag-over .zone-drop-hint {
   margin: 4px 0;
 }
 
-/* ----- Drop indicator ----- */
+/* ----- Drop ghost ----- */
 
-.drop-indicator {
-  position: fixed;
-  height: 2px;
-  background: var(--accent);
-  border-radius: 1px;
+.drop-ghost {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  min-height: 32px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: var(--text-dim);
+  font-size: 13px;
   pointer-events: none;
-  z-index: 999;
-  transition: top 50ms ease, left 50ms ease;
+}
+
+.drop-ghost-grid {
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 4px;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.drop-ghost-folder {
+  margin: 2px 0;
+  margin-left: 16px;
+}
+
+.drop-ghost-danger {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  justify-content: center;
+  font-size: 16px;
 }
 
 /* ----- Empty states ----- */
