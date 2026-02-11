@@ -18,6 +18,14 @@ async function init(): Promise<void> {
     collapsedFolders = new Set(stored.collapsedFolders as string[]);
   }
 
+  // Wire up toolbar buttons (once)
+  document.getElementById("new-folder-btn")!.addEventListener("click", () => {
+    const name = prompt("New folder name:");
+    if (name && state?.rootFolderId) {
+      sendMessage({ type: "createFolder", parentId: state.rootFolderId, title: name }).then(() => refreshState());
+    }
+  });
+
   state = await sendMessage({ type: "getState" }) as PanelState;
   render();
 }
@@ -127,16 +135,6 @@ function renderBookmarks(roots: AnnotatedBookmark[]): void {
   if (!hasItems) {
     list.innerHTML = '<div class="empty-state">Drag tabs here to bookmark</div>';
   }
-
-  // Right-click on zone 2 background to create folder
-  list.addEventListener("contextmenu", (e) => {
-    if ((e.target as HTMLElement).closest(".tab-item, .folder-header")) return;
-    e.preventDefault();
-    const name = prompt("New folder name:");
-    if (name && state?.rootFolderId) {
-      sendMessage({ type: "createFolder", parentId: state.rootFolderId, title: name }).then(() => refreshState());
-    }
-  });
 
   setupDropZone(list, "bookmarks");
 }

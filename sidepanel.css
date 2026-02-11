@@ -156,6 +156,34 @@ body {
   font-size: 11px;
 }
 
+/* ----- Zone toolbar ----- */
+
+.zone-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 2px 4px;
+}
+
+.toolbar-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition), color var(--transition);
+}
+
+.toolbar-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.toolbar-icon {
+  font-size: 11px;
+}
+
 /* ----- Zone 2 & 3: Tab lists ----- */
 
 .tabs-list {
