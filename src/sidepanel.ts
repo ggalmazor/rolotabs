@@ -21,9 +21,22 @@ async function init(): Promise<void> {
   }
 
   // Track drag state globally for CSS
-  document.addEventListener("dragstart", () => document.body.classList.add("is-dragging"));
-  document.addEventListener("dragend", () => { document.body.classList.remove("is-dragging"); hideDropIndicator(); });
-  document.addEventListener("drop", () => { document.body.classList.remove("is-dragging"); hideDropIndicator(); });
+  document.addEventListener("dragstart", (e) => {
+    document.body.classList.add("is-dragging");
+    // Mark if drag originated from zone 3
+    const target = e.target as HTMLElement;
+    if (target.closest("#zone-unlinked")) {
+      document.body.classList.add("is-dragging-from-zone3");
+    }
+  });
+  document.addEventListener("dragend", () => {
+    document.body.classList.remove("is-dragging", "is-dragging-from-zone3");
+    hideDropIndicator();
+  });
+  document.addEventListener("drop", () => {
+    document.body.classList.remove("is-dragging", "is-dragging-from-zone3");
+    hideDropIndicator();
+  });
 
   state = await sendMessage({ type: "getState" }) as PanelState;
   render();
@@ -350,6 +363,8 @@ function setupUnbookmarkDropZone(element: HTMLElement): void {
   element.dataset.dropZone = "true";
 
   element.addEventListener("dragover", (e) => {
+    // Don't accept drops from zone 3 items (they go to zone 1/2)
+    if (document.body.classList.contains("is-dragging-from-zone3")) return;
     const raw = e.dataTransfer!.types.includes("application/rolotabs");
     if (!raw) return;
     e.preventDefault();

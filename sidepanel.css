@@ -75,8 +75,8 @@ body {
   display: none;
 }
 
-/* Show zone 3 during drag even if empty */
-body.is-dragging .zone-unlinked.is-empty {
+/* Show zone 3 during drag even if empty (only for bookmark drags) */
+body.is-dragging:not(.is-dragging-from-zone3) .zone-unlinked.is-empty {
   display: block;
 }
 
@@ -84,7 +84,7 @@ body.is-dragging .zone-unlinked.is-empty .zone-header {
   display: block;
 }
 
-body.is-dragging .zone-unlinked .zone-drop-hint {
+body.is-dragging:not(.is-dragging-from-zone3) .zone-unlinked .zone-drop-hint {
   display: block;
 }
 
