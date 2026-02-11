@@ -202,6 +202,8 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   if (tab.url || tab.pendingUrl) {
     await tryAssociateTab(tab);
   }
+  // Ungroup tabs that inherited a managed group but aren't bookmarked
+  await ungroupIfNotBookmarked(tab);
   await notifySidePanel();
 });
 
@@ -231,6 +233,21 @@ chrome.tabs.onRemoved.addListener(async (tabId, _removeInfo) => {
 chrome.tabs.onActivated.addListener(async (_activeInfo) => {
   await notifySidePanel();
 });
+
+/** Ungroup a tab if it's in a managed group (pinned/bookmarked) but not actually bookmarked. */
+async function ungroupIfNotBookmarked(tab: chrome.tabs.Tab): Promise<void> {
+  if (!tab.id || tab.groupId === undefined || tab.groupId === -1) return;
+  // Already associated with a bookmark — leave it
+  if (tabToBookmark.has(tab.id)) return;
+  // Only ungroup from our managed groups
+  if (tab.groupId === pinnedGroupId || tab.groupId === bookmarkedGroupId) {
+    try {
+      await chrome.tabs.ungroup(tab.id);
+    } catch {
+      // tab may have been closed
+    }
+  }
+}
 
 async function tryAssociateTab(tab: chrome.tabs.Tab): Promise<void> {
   const url = tab.url || tab.pendingUrl;
