@@ -7,6 +7,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.6.0] — 2026-02-12
+
+### Added
+- **Light theme:** Automatic via `prefers-color-scheme`. All hardcoded colors
+  extracted to CSS custom properties.
+- **Confirmation toasts:** Destructive bulk actions (close all above/below,
+  close others, clear all, delete folder) now show a Yes/No toast instead
+  of instant execution or `confirm()` dialogs.
+- **Onboarding:** Welcome message with drag instructions for first-run users,
+  auto-hides once items are pinned or bookmarked.
+- **Custom rolodex icon:** Yellow/purple rolodex icon by M2n from Noun Project
+  (CC BY 3.0) at all sizes (16, 32, 48, 128px).
+
 ## [0.5.0] — 2026-02-11
 
 ### Changed
