@@ -25,6 +25,10 @@ let pinnedIds: string[] = [];
 // "Other Bookmarks" folder ID — the root destination for pinned bookmarks
 let otherBookmarksFolderId: string | null = null;
 
+// Tab group IDs for zone-based grouping
+let pinnedGroupId: number | null = null;
+let bookmarkedGroupId: number | null = null;
+
 // ---------------------------------------------------------------------------
 // Initialization
 // ---------------------------------------------------------------------------
@@ -74,6 +78,65 @@ async function cleanupPinnedIds(): Promise<boolean> {
   }
   pinnedIds = valid;
   return pinnedIds.length !== before;
+}
+
+// ---------------------------------------------------------------------------
+// Tab grouping
+// ---------------------------------------------------------------------------
+
+async function ensureGroup(
+  label: string,
+  color: chrome.tabGroups.ColorEnum,
+  currentGroupId: number | null,
+): Promise<number> {
+  // Check if existing group is still valid
+  if (currentGroupId !== null) {
+    try {
+      await chrome.tabGroups.get(currentGroupId);
+      return currentGroupId;
+    } catch {
+      // Group was closed
+    }
+  }
+  // Find an existing group with our label
+  const groups = await chrome.tabGroups.query({ title: label });
+  if (groups.length > 0) {
+    return groups[0].id;
+  }
+  // Will be created when first tab is added
+  return -1;
+}
+
+async function addTabToGroup(
+  tabId: number,
+  zone: "pinned" | "bookmarked",
+): Promise<void> {
+  const label = zone === "pinned" ? "📌 Pinned" : "📚 Bookmarks";
+  const color: chrome.tabGroups.ColorEnum = zone === "pinned" ? "blue" : "grey";
+
+  try {
+    let groupId = zone === "pinned" ? pinnedGroupId : bookmarkedGroupId;
+
+    // Validate existing group
+    groupId = await ensureGroup(label, color, groupId);
+
+    if (groupId === -1) {
+      // Create new group with this tab
+      groupId = await chrome.tabs.group({ tabIds: [tabId] });
+      await chrome.tabGroups.update(groupId, { title: label, color, collapsed: false });
+    } else {
+      // Add tab to existing group
+      await chrome.tabs.group({ tabIds: [tabId], groupId });
+    }
+
+    if (zone === "pinned") {
+      pinnedGroupId = groupId;
+    } else {
+      bookmarkedGroupId = groupId;
+    }
+  } catch {
+    // Grouping failed (e.g. tab already closed) — not critical
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -244,6 +307,7 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
 
     case "activateTab": {
       const bookmarkId = message.bookmarkId as string;
+      const isPinned = pinnedIds.includes(bookmarkId);
       const tabId = bookmarkToTab.get(bookmarkId);
       if (tabId) {
         await chrome.tabs.update(tabId, { active: true });
@@ -255,6 +319,7 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
           const newTab = await chrome.tabs.create({ url: bm.url });
           bookmarkToTab.set(bookmarkId, newTab.id!);
           tabToBookmark.set(newTab.id!, bookmarkId);
+          await addTabToGroup(newTab.id!, isPinned ? "pinned" : "bookmarked");
         }
       }
       return await getFullState();
@@ -290,10 +355,12 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       if (!pinnedIds.includes(bookmarkId)) {
         pinnedIds.push(bookmarkId);
         await savePinnedIds();
-        // Move to root folder (out of any subfolder)
         if (otherBookmarksFolderId) {
           await chrome.bookmarks.move(bookmarkId, { parentId: otherBookmarksFolderId });
         }
+        // Move tab to pinned group if loaded
+        const tabId = bookmarkToTab.get(bookmarkId);
+        if (tabId) await addTabToGroup(tabId, "pinned");
       }
       return await getFullState();
     }
@@ -304,6 +371,9 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       if (idx !== -1) {
         pinnedIds.splice(idx, 1);
         await savePinnedIds();
+        // Move tab to bookmarked group if loaded
+        const tabId = bookmarkToTab.get(bookmarkId);
+        if (tabId) await addTabToGroup(tabId, "bookmarked");
       }
       return await getFullState();
     }
@@ -330,6 +400,7 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
         pinnedIds.push(bm.id);
         await savePinnedIds();
       }
+      await addTabToGroup(tabId, message.pinned ? "pinned" : "bookmarked");
       return await getFullState();
     }
 

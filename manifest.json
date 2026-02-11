@@ -6,6 +6,7 @@
   "permissions": [
     "bookmarks",
     "tabs",
+    "tabGroups",
     "sidePanel",
     "favicon",
     "storage"
