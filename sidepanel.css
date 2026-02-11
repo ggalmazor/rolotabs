@@ -119,8 +119,8 @@ body.is-dragging .zone-unlinked.is-empty .zone-header {
 
 .pinned-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 28px);
-  gap: 2px;
+  grid-template-columns: repeat(auto-fill, 40px);
+  gap: 4px;
   padding: 4px;
 }
 
@@ -144,8 +144,8 @@ body.is-dragging .zone-unlinked.is-empty .zone-header {
 }
 
 .pinned-item .favicon {
-  width: 16px;
-  height: 16px;
+  width: 32px;
+  height: 32px;
   border-radius: 3px;
   opacity: 0.6;
   transition: opacity var(--transition);
