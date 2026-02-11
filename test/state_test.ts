@@ -4,7 +4,7 @@ import {
   buildAssociations,
   findMatchingBookmark,
   annotateNode,
-  getUnlinkedTabs,
+  getOpenTabs,
   flattenBookmarkTree,
   isUnderRoot,
 } from "../src/lib/state.ts";
@@ -147,19 +147,23 @@ describe("annotateNode", () => {
   });
 });
 
-describe("getUnlinkedTabs", () => {
-  it("returns tabs not associated with any bookmark", () => {
+describe("getOpenTabs", () => {
+  it("returns all open tabs regardless of bookmark association", () => {
     const tabs = [
       { id: 1, url: "https://example.com", title: "Ex" },
       { id: 2, url: "https://other.com", title: "Other" },
     ];
     const tabToBookmark = new Map<number, string>([[1, "bm1"]]);
 
-    const result = getUnlinkedTabs(tabs, tabToBookmark, 2);
+    const result = getOpenTabs(tabs, tabToBookmark, 2);
 
-    assertEquals(result.length, 1);
-    assertEquals(result[0].tabId, 2);
-    assertEquals(result[0].isActive, true);
+    assertEquals(result.length, 2);
+    assertEquals(result[0].tabId, 1);
+    assertEquals(result[0].isBookmarked, true);
+    assertEquals(result[0].isActive, false);
+    assertEquals(result[1].tabId, 2);
+    assertEquals(result[1].isBookmarked, false);
+    assertEquals(result[1].isActive, true);
   });
 
   it("filters out chrome:// and extension URLs", () => {
@@ -169,17 +173,16 @@ describe("getUnlinkedTabs", () => {
       { id: 3, url: "https://example.com", title: "Ex" },
     ];
 
-    const result = getUnlinkedTabs(tabs, new Map(), null);
+    const result = getOpenTabs(tabs, new Map(), null);
 
     assertEquals(result.length, 1);
     assertEquals(result[0].tabId, 3);
   });
 
-  it("returns empty for no unlinked tabs", () => {
-    const tabs = [{ id: 1, url: "https://example.com", title: "Ex" }];
-    const tabToBookmark = new Map<number, string>([[1, "bm1"]]);
+  it("returns empty when all tabs are chrome:// pages", () => {
+    const tabs = [{ id: 1, url: "chrome://extensions/", title: "Ext" }];
 
-    assertEquals(getUnlinkedTabs(tabs, tabToBookmark, null).length, 0);
+    assertEquals(getOpenTabs(tabs, new Map(), null).length, 0);
   });
 });
 

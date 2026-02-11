@@ -4,7 +4,7 @@
 // Manages the bookmark folder structure, tab↔bookmark associations, and events.
 
 import { urlsMatch } from "./lib/urls.ts";
-import { annotateNode, flattenBookmarkTree, getUnlinkedTabs } from "./lib/state.ts";
+import { annotateNode, flattenBookmarkTree, getOpenTabs } from "./lib/state.ts";
 import type { BookmarkNode } from "./lib/types.ts";
 
 const ROOT_FOLDER_NAME = "Rolotabs";
@@ -376,7 +376,7 @@ async function getFullState() {
     annotateNode(n as BookmarkNode, bookmarkToTab, activeTabId)
   ) ?? [];
 
-  const unlinked = getUnlinkedTabs(
+  const openTabs = getOpenTabs(
     allTabs.map((t) => ({ id: t.id!, url: t.url, title: t.title, favIconUrl: t.favIconUrl })),
     tabToBookmark,
     activeTabId,
@@ -385,7 +385,7 @@ async function getFullState() {
   return {
     pinned,
     tabs,
-    unlinked,
+    openTabs,
     activeTabId,
     folderIds: { rootFolderId, pinnedFolderId, tabsFolderId },
   };

@@ -30,13 +30,14 @@ export interface AnnotatedBookmark {
   children?: AnnotatedBookmark[];
 }
 
-/** An unlinked (non-bookmarked) tab. */
-export interface UnlinkedTab {
+/** An open tab shown in zone 3. */
+export interface OpenTab {
   tabId: number;
   title?: string;
   url?: string;
   favIconUrl?: string;
   isActive: boolean;
+  isBookmarked: boolean;
 }
 
 /** The two Maps that track bookmark↔tab associations. */
@@ -56,7 +57,7 @@ export interface FolderIds {
 export interface PanelState {
   pinned: AnnotatedBookmark[];
   tabs: AnnotatedBookmark[];
-  unlinked: UnlinkedTab[];
+  openTabs: OpenTab[];
   activeTabId: number | null;
   folderIds: FolderIds;
 }

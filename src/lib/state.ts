@@ -4,7 +4,7 @@ import type {
   Associations,
   BookmarkNode,
   TabInfo,
-  UnlinkedTab,
+  OpenTab,
 } from "./types.ts";
 
 /**
@@ -79,15 +79,15 @@ export function annotateNode(
 }
 
 /**
- * Filter tabs to find "unlinked" ones (not bookmarked, not chrome:// pages).
+ * Get all open tabs (excluding chrome:// and extension pages),
+ * annotated with bookmark and active status.
  */
-export function getUnlinkedTabs(
+export function getOpenTabs(
   allTabs: TabInfo[],
   tabToBookmark: Map<number, string>,
   activeTabId: number | null,
-): UnlinkedTab[] {
+): OpenTab[] {
   return allTabs
-    .filter((t) => !tabToBookmark.has(t.id))
     .filter((t) => !t.url?.startsWith("chrome://"))
     .filter((t) => !t.url?.startsWith("chrome-extension://"))
     .map((t) => ({
@@ -96,6 +96,7 @@ export function getUnlinkedTabs(
       url: t.url,
       favIconUrl: t.favIconUrl,
       isActive: t.id === activeTabId,
+      isBookmarked: tabToBookmark.has(t.id),
     }));
 }
 

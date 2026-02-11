@@ -3,7 +3,7 @@
 // Rolotabs — Side Panel UI
 // Renders the three-zone sidebar and handles user interactions.
 
-import type { AnnotatedBookmark, FolderIds, PanelState, UnlinkedTab } from "./lib/types.ts";
+import type { AnnotatedBookmark, FolderIds, OpenTab, PanelState } from "./lib/types.ts";
 
 let state: PanelState | null = null;
 let folderIds: FolderIds | null = null;
@@ -48,7 +48,7 @@ function render(): void {
   if (!state) return;
   renderPinned(state.pinned);
   renderTabs(state.tabs);
-  renderUnlinked(state.unlinked);
+  renderOpenTabs(state.openTabs);
 }
 
 // ----- Zone 1: Pinned grid -----
@@ -223,20 +223,21 @@ function renderTabItem(item: AnnotatedBookmark): HTMLElement {
   return el;
 }
 
-// ----- Zone 3: Unlinked tabs -----
+// ----- Zone 3: Open tabs -----
 
-function renderUnlinked(unlinked: UnlinkedTab[]): void {
+function renderOpenTabs(openTabs: OpenTab[]): void {
   const list = document.getElementById("unlinked-list")!;
   const section = document.getElementById("zone-unlinked")!;
   list.innerHTML = "";
 
-  section.classList.toggle("is-empty", unlinked.length === 0);
-  if (unlinked.length === 0) return;
+  section.classList.toggle("is-empty", openTabs.length === 0);
+  if (openTabs.length === 0) return;
 
-  for (const tab of unlinked) {
+  for (const tab of openTabs) {
     const el = document.createElement("div");
     el.className = "tab-item is-loaded";
     if (tab.isActive) el.classList.add("is-active");
+    if (tab.isBookmarked) el.classList.add("is-bookmarked");
     el.dataset.tabId = String(tab.tabId);
 
     const img = document.createElement("img");
@@ -260,23 +261,26 @@ function renderUnlinked(unlinked: UnlinkedTab[]): void {
 
     el.addEventListener("click", (e) => {
       if ((e.target as HTMLElement).closest(".close-btn")) return;
-      activateUnlinkedTab(tab.tabId);
+      activateOpenTab(tab.tabId);
     });
 
     closeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      closeUnlinkedTab(tab.tabId);
+      closeOpenTab(tab.tabId);
     });
 
-    el.draggable = true;
-    el.addEventListener("dragstart", (e) => {
-      e.dataTransfer!.setData(
-        "application/rolotabs",
-        JSON.stringify({ type: "unlinked", tabId: tab.tabId }),
-      );
-      el.classList.add("dragging");
-    });
-    el.addEventListener("dragend", () => el.classList.remove("dragging"));
+    // Only allow dragging unbookmarked tabs (bookmarked ones are already in zone 2)
+    if (!tab.isBookmarked) {
+      el.draggable = true;
+      el.addEventListener("dragstart", (e) => {
+        e.dataTransfer!.setData(
+          "application/rolotabs",
+          JSON.stringify({ type: "unlinked", tabId: tab.tabId }),
+        );
+        el.classList.add("dragging");
+      });
+      el.addEventListener("dragend", () => el.classList.remove("dragging"));
+    }
 
     list.appendChild(el);
   }
@@ -343,7 +347,7 @@ async function activateBookmark(bookmarkId: string): Promise<void> {
   render();
 }
 
-async function activateUnlinkedTab(tabId: number): Promise<void> {
+async function activateOpenTab(tabId: number): Promise<void> {
   state = await sendMessage({ type: "activateUnlinkedTab", tabId }) as PanelState;
   render();
 }
@@ -353,7 +357,7 @@ async function closeBookmarkTab(bookmarkId: string): Promise<void> {
   render();
 }
 
-async function closeUnlinkedTab(tabId: number): Promise<void> {
+async function closeOpenTab(tabId: number): Promise<void> {
   state = await sendMessage({ type: "closeUnlinkedTab", tabId }) as PanelState;
   render();
 }
