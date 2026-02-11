@@ -43,6 +43,23 @@ async function init(): Promise<void> {
     hideDropIndicator();
   });
 
+  // Create folder button
+  document.getElementById("create-folder-btn")!.addEventListener("click", () => {
+    const name = prompt("Folder name:");
+    if (name) {
+      sendMessage({ type: "createFolder", parentId: state?.rootFolderId, title: name }).then(() => refreshState());
+    }
+  });
+
+  // Clear all open tabs button
+  document.getElementById("clear-open-tabs-btn")!.addEventListener("click", async () => {
+    if (!state?.openTabs.length) return;
+    for (const tab of state.openTabs) {
+      await sendMessage({ type: "closeOpenTab", tabId: tab.tabId });
+    }
+    await refreshState();
+  });
+
   state = await sendMessage({ type: "getState" }) as PanelState;
   render();
 }

@@ -97,6 +97,29 @@ body.is-dragging .zone-unlinked.is-empty .zone-header {
   height: 1px;
   background: var(--divider);
   margin: 6px 4px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.divider-action {
+  position: absolute;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.divider-action:hover {
+  color: var(--text-primary);
+}
+
+.divider-action-right {
+  right: 0;
 }
 
 .zone-header {

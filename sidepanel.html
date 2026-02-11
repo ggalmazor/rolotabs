@@ -11,7 +11,9 @@
       <!-- Zone 1: Pinned (favicon grid) -->
       <section id="zone-pinned" class="zone">
         <div id="pinned-grid" class="pinned-grid"></div>
-        <div class="zone-divider"></div>
+        <div class="zone-divider">
+          <button id="create-folder-btn" class="divider-action divider-action-right" title="New folder">📁+</button>
+        </div>
       </section>
 
       <!-- Zone 2: Bookmarked tabs (hierarchical list) -->
@@ -21,7 +23,9 @@
 
       <!-- Zone 3: Unlinked tabs (ephemeral) -->
       <section id="zone-unlinked" class="zone zone-unlinked">
-        <div class="zone-divider"></div>
+        <div class="zone-divider">
+          <button id="clear-open-tabs-btn" class="divider-action divider-action-right" title="Close all open tabs">clear</button>
+        </div>
         <div class="zone-header">
           <span class="zone-label">Open Tabs</span>
         </div>
