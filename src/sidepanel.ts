@@ -313,15 +313,7 @@ function renderTabItem(item: AnnotatedBookmark): HTMLElement {
 
   el.addEventListener("click", (e) => {
     if ((e.target as HTMLElement).closest(".close-btn")) return;
-    if ((e.target as HTMLElement).closest(".edit-in-place")) return;
     activateBookmark(item.id);
-  });
-  title.addEventListener("dblclick", (e) => {
-    e.stopPropagation();
-    editInPlace(title, item.title, (newTitle) => {
-      chrome.bookmarks.update(item.id, { title: newTitle });
-      refreshState();
-    });
   });
 
   closeBtn.addEventListener("click", (e) => {
