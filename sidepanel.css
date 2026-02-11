@@ -182,11 +182,11 @@ body.is-dragging .zone-unlinked.is-empty .zone-header {
 }
 
 body.is-dragging .pinned-grid-empty {
-  display: none;
+  visibility: hidden;
 }
 
 body.is-dragging .empty-state {
-  display: none;
+  visibility: hidden;
 }
 
 /* ----- Zone 2 & 3: Tab lists ----- */
