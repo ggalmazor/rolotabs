@@ -23,10 +23,20 @@ async function init(): Promise<void> {
   // Track drag state globally for CSS
   document.addEventListener("dragstart", (e) => {
     document.body.classList.add("is-dragging");
-    // Mark if drag originated from zone 3
     const target = e.target as HTMLElement;
     if (target.closest("#zone-unlinked")) {
       document.body.classList.add("is-dragging-from-zone3");
+    }
+    // Update zone 3 hint based on whether the dragged bookmark is loaded
+    const hint = document.querySelector(".zone-drop-hint") as HTMLElement;
+    if (hint) {
+      const bmId = target.dataset?.bookmarkId;
+      const isLoaded = target.classList.contains("is-loaded");
+      if (bmId && !isLoaded) {
+        hint.textContent = "Drop to remove bookmark";
+      } else {
+        hint.textContent = "";
+      }
     }
   });
   document.addEventListener("dragend", () => {
