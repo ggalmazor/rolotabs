@@ -7,6 +7,20 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.4.0] — 2026-02-11
+
+### Added
+- **Zone 3 context menu:** Right-click open tabs for Pin, Bookmark, Close tab,
+  Close all above, Close all below, Close other tabs. Contextual items hidden
+  when not applicable (e.g. "Close all above" on first tab).
+- **Auto-ungroup inherited tabs:** New tabs opened from pinned/bookmarked tabs
+  are automatically removed from managed tab groups since they belong in zone 3.
+
+### Fixed
+- **Tab group titles/icons disappearing:** Groups now always re-apply title
+  and color when tabs are added. Removed race condition where Chrome's async
+  group assignment triggered premature ungrouping.
+
 ## [0.3.0] — 2026-02-11
 
 ### Changed
