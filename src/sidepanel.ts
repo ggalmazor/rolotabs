@@ -19,14 +19,6 @@ async function init(): Promise<void> {
     collapsedFolders = new Set(stored.collapsedFolders as string[]);
   }
 
-  // Wire up toolbar buttons (once)
-  document.getElementById("new-folder-btn")!.addEventListener("click", () => {
-    const name = prompt("New folder name:");
-    if (name && state?.rootFolderId) {
-      sendMessage({ type: "createFolder", parentId: state.rootFolderId, title: name }).then(() => refreshState());
-    }
-  });
-
   state = await sendMessage({ type: "getState" }) as PanelState;
   render();
 }
