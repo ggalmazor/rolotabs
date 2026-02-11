@@ -13,6 +13,7 @@ import {
   getPinnedBookmarks,
 } from "./lib/state.ts";
 import type { BookmarkNode } from "./lib/types.ts";
+import { reorderItem } from "./lib/reorder.ts";
 
 // In-memory state: bookmarkId → tabId (or null if unloaded)
 const bookmarkToTab = new Map<string, number | null>();
@@ -491,6 +492,22 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
         await savePinnedIds();
       }
       await chrome.bookmarks.remove(bookmarkId);
+      return await getFullState();
+    }
+
+    case "reorderPinned": {
+      const bookmarkId = message.bookmarkId as string;
+      const toIndex = message.toIndex as number;
+      pinnedIds = reorderItem(pinnedIds, bookmarkId, toIndex);
+      await savePinnedIds();
+      return await getFullState();
+    }
+
+    case "reorderBookmark": {
+      const bookmarkId = message.bookmarkId as string;
+      const parentId = message.parentId as string;
+      const index = message.index as number;
+      await chrome.bookmarks.move(bookmarkId, { parentId, index });
       return await getFullState();
     }
 

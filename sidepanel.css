@@ -398,6 +398,18 @@ body.is-dragging .zone-unlinked.is-empty::after {
   margin: 4px 0;
 }
 
+/* ----- Drop indicator ----- */
+
+.drop-indicator {
+  position: fixed;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 999;
+  transition: top 50ms ease, left 50ms ease;
+}
+
 /* ----- Empty states ----- */
 
 .empty-state {

@@ -5,6 +5,7 @@
 
 import type { AnnotatedBookmark, OpenTab, PanelState } from "./lib/types.ts";
 import { showContextMenu, type MenuEntry } from "./lib/context-menu.ts";
+import { showDropIndicator, showGridDropIndicator, hideDropIndicator } from "./lib/drop-indicator.ts";
 
 let state: PanelState | null = null;
 let collapsedFolders = new Set<string>();
@@ -21,8 +22,8 @@ async function init(): Promise<void> {
 
   // Track drag state globally for CSS
   document.addEventListener("dragstart", () => document.body.classList.add("is-dragging"));
-  document.addEventListener("dragend", () => document.body.classList.remove("is-dragging"));
-  document.addEventListener("drop", () => document.body.classList.remove("is-dragging"));
+  document.addEventListener("dragend", () => { document.body.classList.remove("is-dragging"); hideDropIndicator(); });
+  document.addEventListener("drop", () => { document.body.classList.remove("is-dragging"); hideDropIndicator(); });
 
   state = await sendMessage({ type: "getState" }) as PanelState;
   render();
@@ -379,6 +380,8 @@ function setupUnbookmarkDropZone(element: HTMLElement): void {
 // Drag & drop
 // ---------------------------------------------------------------------------
 
+let pendingDropIndex = 0;
+
 function setupDropZone(element: HTMLElement, zone: "pinned" | "bookmarks"): void {
   if (element.dataset.dropZone) {
     element.dataset.dropTarget = zone;
@@ -390,17 +393,25 @@ function setupDropZone(element: HTMLElement, zone: "pinned" | "bookmarks"): void
   element.addEventListener("dragover", (e) => {
     e.preventDefault();
     e.dataTransfer!.dropEffect = "move";
-    element.classList.add("drag-over");
+    const target = element.dataset.dropTarget!;
+    if (target === "pinned") {
+      pendingDropIndex = showGridDropIndicator(element, e.clientX, e.clientY);
+    } else {
+      pendingDropIndex = showDropIndicator(element, e.clientY);
+    }
   });
 
-  element.addEventListener("dragleave", () => {
-    element.classList.remove("drag-over");
+  element.addEventListener("dragleave", (e) => {
+    // Only hide if leaving the element entirely
+    if (!element.contains(e.relatedTarget as Node)) {
+      hideDropIndicator();
+    }
   });
 
   element.addEventListener("drop", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    element.classList.remove("drag-over");
+    hideDropIndicator();
 
     const raw = e.dataTransfer!.getData("application/rolotabs");
     if (!raw) return;
@@ -409,7 +420,6 @@ function setupDropZone(element: HTMLElement, zone: "pinned" | "bookmarks"): void
     const target = element.dataset.dropTarget!;
 
     if (data.type === "openTab") {
-      // Promote: create bookmark from open tab
       if (target === "pinned") {
         await sendMessage({ type: "promoteTab", tabId: data.tabId, pinned: true });
       } else {
@@ -417,12 +427,17 @@ function setupDropZone(element: HTMLElement, zone: "pinned" | "bookmarks"): void
       }
     } else if (data.type === "bookmark") {
       if (target === "pinned") {
-        await sendMessage({ type: "pinBookmark", bookmarkId: data.bookmarkId });
+        // If already pinned, reorder; otherwise pin
+        if (state?.pinnedIds.includes(data.bookmarkId)) {
+          await sendMessage({ type: "reorderPinned", bookmarkId: data.bookmarkId, toIndex: pendingDropIndex });
+        } else {
+          await sendMessage({ type: "pinBookmark", bookmarkId: data.bookmarkId });
+        }
       } else {
-        // Unpin if pinned, and move to root folder
+        // Unpin if pinned, move to root at the drop position
         await sendMessage({ type: "unpinBookmark", bookmarkId: data.bookmarkId });
         if (state?.rootFolderId) {
-          await sendMessage({ type: "moveBookmark", bookmarkId: data.bookmarkId, parentId: state.rootFolderId });
+          await sendMessage({ type: "reorderBookmark", bookmarkId: data.bookmarkId, parentId: state.rootFolderId, index: pendingDropIndex });
         }
       }
     }
@@ -477,6 +492,7 @@ function toggleFolder(folderId: string): void {
 // ---------------------------------------------------------------------------
 
 async function handleDropOnFolder(e: DragEvent, folderId: string): Promise<void> {
+  hideDropIndicator();
   const raw = e.dataTransfer!.getData("application/rolotabs");
   if (!raw) return;
   const data = JSON.parse(raw);
@@ -484,7 +500,7 @@ async function handleDropOnFolder(e: DragEvent, folderId: string): Promise<void>
   if (data.type === "openTab") {
     await sendMessage({ type: "promoteTab", tabId: data.tabId, parentId: folderId });
   } else if (data.type === "bookmark") {
-    await sendMessage({ type: "moveBookmark", bookmarkId: data.bookmarkId, parentId: folderId });
+    await sendMessage({ type: "reorderBookmark", bookmarkId: data.bookmarkId, parentId: folderId, index: 0 });
   }
   await refreshState();
 }
