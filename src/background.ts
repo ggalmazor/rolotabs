@@ -429,6 +429,29 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       return await getFullState();
     }
 
+    case "unbookmarkTab": {
+      // Remove bookmark but keep the tab open and ungroup it
+      const bookmarkId = message.bookmarkId as string;
+      const tabId = bookmarkToTab.get(bookmarkId);
+      bookmarkToTab.delete(bookmarkId);
+      if (tabId) {
+        tabToBookmark.delete(tabId);
+        try {
+          await chrome.tabs.ungroup(tabId);
+        } catch {
+          // Tab may not be in a group
+        }
+      }
+      // Remove from pinned if needed
+      const pinnedIdx = pinnedIds.indexOf(bookmarkId);
+      if (pinnedIdx !== -1) {
+        pinnedIds.splice(pinnedIdx, 1);
+        await savePinnedIds();
+      }
+      await chrome.bookmarks.remove(bookmarkId);
+      return await getFullState();
+    }
+
     case "removeBookmark": {
       const bookmarkId = message.bookmarkId as string;
       const tabId = bookmarkToTab.get(bookmarkId);

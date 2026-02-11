@@ -19,6 +19,11 @@ async function init(): Promise<void> {
     collapsedFolders = new Set(stored.collapsedFolders as string[]);
   }
 
+  // Track drag state globally for CSS
+  document.addEventListener("dragstart", () => document.body.classList.add("is-dragging"));
+  document.addEventListener("dragend", () => document.body.classList.remove("is-dragging"));
+  document.addEventListener("drop", () => document.body.classList.remove("is-dragging"));
+
   state = await sendMessage({ type: "getState" }) as PanelState;
   render();
 }
@@ -333,6 +338,41 @@ function renderOpenTabs(openTabs: OpenTab[]): void {
 
     list.appendChild(el);
   }
+
+  // Zone 3 is a drop target: dropping a bookmark here removes it
+  setupUnbookmarkDropZone(section);
+}
+
+function setupUnbookmarkDropZone(element: HTMLElement): void {
+  if (element.dataset.dropZone) return;
+  element.dataset.dropZone = "true";
+
+  element.addEventListener("dragover", (e) => {
+    const raw = e.dataTransfer!.types.includes("application/rolotabs");
+    if (!raw) return;
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = "move";
+    element.classList.add("drag-over");
+  });
+
+  element.addEventListener("dragleave", () => {
+    element.classList.remove("drag-over");
+  });
+
+  element.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    element.classList.remove("drag-over");
+
+    const raw = e.dataTransfer!.getData("application/rolotabs");
+    if (!raw) return;
+    const data = JSON.parse(raw);
+
+    if (data.type === "bookmark") {
+      await sendMessage({ type: "unbookmarkTab", bookmarkId: data.bookmarkId });
+      await refreshState();
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------

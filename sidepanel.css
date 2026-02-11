@@ -75,6 +75,24 @@ body {
   display: none;
 }
 
+/* Show zone 3 during drag even if empty */
+body.is-dragging .zone-unlinked.is-empty {
+  display: block;
+}
+
+body.is-dragging .zone-unlinked.is-empty .zone-header {
+  display: block;
+}
+
+body.is-dragging .zone-unlinked.is-empty::after {
+  content: "Drop here to unbookmark";
+  display: block;
+  padding: 12px 8px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
 .zone-unlinked::-webkit-scrollbar {
   width: 4px;
 }
