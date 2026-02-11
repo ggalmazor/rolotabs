@@ -48,11 +48,26 @@ body {
   padding: 0 8px;
 }
 
-.zone-unlinked {
+#zone-tabs {
   flex: 1;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+}
+
+#zone-tabs .zone-toolbar {
+  flex-shrink: 0;
+}
+
+#zone-tabs .tabs-list {
+  flex: 1;
+}
+
+.zone-unlinked {
+  flex-shrink: 0;
+  max-height: 40%;
   overflow-y: auto;
   overflow-x: hidden;
-  min-height: 0;
 }
 
 .zone-unlinked.is-empty {
