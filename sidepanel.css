@@ -16,6 +16,39 @@
   --radius: 8px;
   --radius-sm: 6px;
   --transition: 150ms ease;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+  --ghost-bg: rgba(255, 255, 255, 0.06);
+  --ghost-border: rgba(255, 255, 255, 0.2);
+  --menu-border: rgba(255, 255, 255, 0.08);
+  --menu-shadow: rgba(0, 0, 0, 0.4);
+  --input-border: rgba(255, 255, 255, 0.2);
+  --input-border-focus: rgba(255, 255, 255, 0.4);
+  --close-bg: rgba(255, 255, 255, 0.1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary: #f5f5f7;
+    --bg-secondary: #e8e8ec;
+    --bg-hover: #dcdce0;
+    --bg-active: #d0d0d6;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-dim: #aeaeb2;
+    --accent: #d63050;
+    --accent-soft: rgba(214, 48, 80, 0.12);
+    --divider: rgba(0, 0, 0, 0.08);
+    --loaded-dot: #34c759;
+    --unloaded-dot: #c7c7cc;
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    --ghost-bg: rgba(0, 0, 0, 0.04);
+    --ghost-border: rgba(0, 0, 0, 0.15);
+    --menu-border: rgba(0, 0, 0, 0.1);
+    --menu-shadow: rgba(0, 0, 0, 0.15);
+    --input-border: rgba(0, 0, 0, 0.15);
+    --input-border-focus: rgba(0, 0, 0, 0.3);
+    --close-bg: rgba(0, 0, 0, 0.08);
+  }
 }
 
 * {
@@ -52,7 +85,7 @@ body {
 }
 
 #app::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--scrollbar-thumb);
   border-radius: 2px;
 }
 
@@ -89,7 +122,7 @@ body.is-dragging .zone-unlinked.is-empty .zone-header {
 }
 
 .zone-unlinked::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--scrollbar-thumb);
   border-radius: 2px;
 }
 
@@ -300,7 +333,7 @@ body.is-dragging .empty-state {
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--close-bg);
   color: var(--text-primary);
 }
 
@@ -359,10 +392,10 @@ body.is-dragging .empty-state {
   z-index: 1000;
   min-width: 160px;
   background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--menu-border);
   border-radius: var(--radius);
   padding: 4px 0;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px var(--menu-shadow);
 }
 
 .context-menu-item {
@@ -414,8 +447,8 @@ body.is-dragging .empty-state {
   padding: 6px 8px;
   border-radius: var(--radius-sm);
   min-height: 32px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: var(--ghost-bg);
+  border: 1px dashed var(--ghost-border);
   color: var(--text-dim);
   font-size: 13px;
   pointer-events: none;
@@ -454,7 +487,7 @@ body.is-dragging .empty-state {
 
 .edit-in-place {
   background: var(--bg-hover);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--input-border);
   border-radius: 3px;
   color: var(--text-primary);
   font-size: inherit;
@@ -465,7 +498,7 @@ body.is-dragging .empty-state {
 }
 
 .edit-in-place:focus {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: var(--input-border-focus);
 }
 
 /* ----- Empty states ----- */

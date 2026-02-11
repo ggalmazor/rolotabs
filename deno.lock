@@ -5,6 +5,7 @@
     "jsr:@std/assert@^1.0.17": "1.0.18",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/testing@*": "1.0.17",
+    "npm:chrome-types@*": "0.1.415",
     "npm:esbuild@0.24": "0.24.2"
   },
   "jsr": {
@@ -150,6 +151,9 @@
       "integrity": "sha512-7VTgWzgMGvup6aSqDPLiW5zHaxYJGTO4OokMjIlrCtf+VpEL+cXKtCvg723iguPYI5oaUNdS+/V7OU2gvXVWEg==",
       "os": ["win32"],
       "cpu": ["x64"]
+    },
+    "chrome-types@0.1.415": {
+      "integrity": "sha512-8xoikSoWsppCbGTKsJ6n8V6sJIMNBCIWcnmomrpfLNuZ3MOFZ9Zk2RFtGaKc7MCV+ct82jPJuPYSbfwbbyzuLw=="
     },
     "esbuild@0.24.2": {
       "integrity": "sha512-+9egpBW8I3CD5XPe0n6BfT5fxLzxrlDzqydF3aviG+9ni1lDC/OvMHcxqEFV0+LANZG5R1bFMWfUrjVsdwxJvA==",
