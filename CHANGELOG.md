@@ -7,6 +7,28 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.5.0] — 2026-02-11
+
+### Changed
+- **Folder icons:** Replaced tree chevrons with 📁 (collapsed) / 📂 (expanded)
+  folder emojis.
+- **Pinned favicon size:** Now 32×32px in a 40px grid (increased in v0.3.0).
+- **README rewritten:** Updated architecture, features, setup, and roadmap
+  to reflect current state.
+
+### Added
+- **Edit in place:** Double-click folder names to rename inline. Context menu
+  "Rename" also uses inline editing for both bookmarks and folders.
+- **Instant folder creation:** "Add folder" button and context menu create
+  a "New folder" immediately and enter edit mode. No more `prompt()` dialogs.
+- **Create folder button** on the zone 1/2 divider.
+- **Clear all button** on the zone 2/3 divider to close all open tabs.
+
+### Removed
+- All `prompt()` dialog usage — replaced by edit-in-place.
+- Double-click to rename bookmarks (only folders support double-click rename;
+  bookmarks use the context menu).
+
 ## [0.4.0] — 2026-02-11
 
 ### Added
