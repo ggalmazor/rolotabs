@@ -361,8 +361,81 @@ function renderOpenTabs(openTabs: OpenTab[]): void {
     });
     el.addEventListener("dragend", () => el.classList.remove("dragging"));
 
+    el.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      onOpenTabContext(e, tab, openTabs);
+    });
+
     list.appendChild(el);
   }
+}
+
+function onOpenTabContext(event: MouseEvent, tab: OpenTab, allTabs: OpenTab[]): void {
+  const idx = allTabs.findIndex((t) => t.tabId === tab.tabId);
+  const entries: MenuEntry[] = [
+    {
+      label: "Pin",
+      icon: "📌",
+      action: () => sendMessage({ type: "promoteTab", tabId: tab.tabId, pinned: true }).then(() => refreshState()),
+    },
+    {
+      label: "Bookmark",
+      icon: "📚",
+      action: () => sendMessage({ type: "promoteTab", tabId: tab.tabId, parentId: state?.rootFolderId }).then(() => refreshState()),
+    },
+    { separator: true },
+    {
+      label: "Close tab",
+      icon: "✕",
+      danger: true,
+      action: () => closeOpenTab(tab.tabId),
+    },
+    {
+      label: "Close all above",
+      icon: "↑",
+      danger: true,
+      action: async () => {
+        for (const t of allTabs.slice(0, idx)) {
+          await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
+        }
+        await refreshState();
+      },
+    },
+    {
+      label: "Close all below",
+      icon: "↓",
+      danger: true,
+      action: async () => {
+        for (const t of allTabs.slice(idx + 1)) {
+          await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
+        }
+        await refreshState();
+      },
+    },
+    {
+      label: "Close other tabs",
+      icon: "✕",
+      danger: true,
+      action: async () => {
+        for (const t of allTabs) {
+          if (t.tabId !== tab.tabId) {
+            await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
+          }
+        }
+        await refreshState();
+      },
+    },
+  ];
+
+  // Filter out "close all above" if first, "close all below" if last
+  const filtered = entries.filter((e) => {
+    if ("label" in e && e.label === "Close all above" && idx === 0) return false;
+    if ("label" in e && e.label === "Close all below" && idx === allTabs.length - 1) return false;
+    if ("label" in e && e.label === "Close other tabs" && allTabs.length === 1) return false;
+    return true;
+  });
+
+  showContextMenu(event.clientX, event.clientY, filtered);
 }
 
 function setupUnbookmarkDropZone(element: HTMLElement): void {
