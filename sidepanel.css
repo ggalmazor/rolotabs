@@ -450,6 +450,24 @@ body.is-dragging .empty-state {
   font-size: 16px;
 }
 
+/* ----- Edit in place ----- */
+
+.edit-in-place {
+  background: var(--bg-hover);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-size: inherit;
+  font-family: inherit;
+  padding: 1px 4px;
+  width: 100%;
+  outline: none;
+}
+
+.edit-in-place:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
 /* ----- Empty states ----- */
 
 .empty-state {

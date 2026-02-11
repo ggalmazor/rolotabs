@@ -470,8 +470,8 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
     case "createFolder": {
       const parentId = message.parentId as string;
       const title = message.title as string;
-      await chrome.bookmarks.create({ parentId, title });
-      return await getFullState();
+      const created = await chrome.bookmarks.create({ parentId, title });
+      return { id: created.id };
     }
 
     case "removeFolder": {

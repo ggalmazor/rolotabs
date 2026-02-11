@@ -9,6 +9,7 @@ import { showDropIndicator, showGridDropIndicator, hideDropIndicator, showFolder
 
 let state: PanelState | null = null;
 let collapsedFolders = new Set<string>();
+let editAfterRenderId: string | null = null;
 
 // ---------------------------------------------------------------------------
 // Initialization
@@ -43,12 +44,14 @@ async function init(): Promise<void> {
     hideDropIndicator();
   });
 
-  // Create folder button
-  document.getElementById("create-folder-btn")!.addEventListener("click", () => {
-    const name = prompt("Folder name:");
-    if (name) {
-      sendMessage({ type: "createFolder", parentId: state?.rootFolderId, title: name }).then(() => refreshState());
+  // Create folder button — creates "New folder" and enters edit mode
+  document.getElementById("create-folder-btn")!.addEventListener("click", async () => {
+    if (!state?.rootFolderId) return;
+    const result = await sendMessage({ type: "createFolder", parentId: state.rootFolderId, title: "New folder" }) as { id?: string };
+    if (result?.id) {
+      editAfterRenderId = result.id;
     }
+    await refreshState();
   });
 
   // Clear all open tabs button
@@ -180,11 +183,13 @@ function renderBookmarks(roots: AnnotatedBookmark[]): void {
         {
           label: "New folder",
           icon: "📁",
-          action: () => {
-            const name = prompt("Folder name:");
-            if (name && state?.rootFolderId) {
-              sendMessage({ type: "createFolder", parentId: state.rootFolderId, title: name }).then(() => refreshState());
+          action: async () => {
+            if (!state?.rootFolderId) return;
+            const result = await sendMessage({ type: "createFolder", parentId: state.rootFolderId, title: "New folder" }) as { id?: string };
+            if (result?.id) {
+              editAfterRenderId = result.id;
             }
+            await refreshState();
           },
         },
       ]);
@@ -197,6 +202,7 @@ function renderBookmarks(roots: AnnotatedBookmark[]): void {
 function renderFolder(folder: AnnotatedBookmark): HTMLElement {
   const container = document.createElement("div");
   container.className = "folder-item";
+  container.dataset.folderId = folder.id;
 
   const isCollapsed = collapsedFolders.has(folder.id);
 
@@ -215,6 +221,23 @@ function renderFolder(folder: AnnotatedBookmark): HTMLElement {
   header.appendChild(name);
 
   header.addEventListener("click", () => toggleFolder(folder.id));
+  name.addEventListener("dblclick", (e) => {
+    e.stopPropagation();
+    editInPlace(name, folder.title, (newTitle) => {
+      chrome.bookmarks.update(folder.id, { title: newTitle });
+      refreshState();
+    });
+  });
+  // Auto-edit newly created folders
+  if (editAfterRenderId === folder.id) {
+    editAfterRenderId = null;
+    requestAnimationFrame(() => {
+      editInPlace(name, folder.title, (newTitle) => {
+        chrome.bookmarks.update(folder.id, { title: newTitle });
+        refreshState();
+      });
+    });
+  }
   header.addEventListener("contextmenu", (e) => {
     e.preventDefault();
     onFolderContext(e, folder);
@@ -288,7 +311,15 @@ function renderTabItem(item: AnnotatedBookmark): HTMLElement {
 
   el.addEventListener("click", (e) => {
     if ((e.target as HTMLElement).closest(".close-btn")) return;
+    if ((e.target as HTMLElement).closest(".edit-in-place")) return;
     activateBookmark(item.id);
+  });
+  title.addEventListener("dblclick", (e) => {
+    e.stopPropagation();
+    editInPlace(title, item.title, (newTitle) => {
+      chrome.bookmarks.update(item.id, { title: newTitle });
+      refreshState();
+    });
   });
 
   closeBtn.addEventListener("click", (e) => {
@@ -593,6 +624,50 @@ async function removeBookmark(bookmarkId: string): Promise<void> {
   render();
 }
 
+// ---------------------------------------------------------------------------
+// Edit in place
+// ---------------------------------------------------------------------------
+
+function editInPlace(
+  el: HTMLElement,
+  currentValue: string,
+  onSave: (newValue: string) => void,
+): void {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "edit-in-place";
+  input.value = currentValue;
+
+  const original = el.textContent;
+  el.textContent = "";
+  el.appendChild(input);
+  input.focus();
+  input.select();
+
+  let saved = false;
+  const save = () => {
+    if (saved) return;
+    saved = true;
+    const val = input.value.trim();
+    if (val && val !== currentValue) {
+      onSave(val);
+    } else {
+      el.textContent = original;
+    }
+  };
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      save();
+    } else if (e.key === "Escape") {
+      saved = true;
+      el.textContent = original;
+    }
+  });
+  input.addEventListener("blur", save);
+}
+
 function toggleFolder(folderId: string): void {
   if (collapsedFolders.has(folderId)) {
     collapsedFolders.delete(folderId);
@@ -649,21 +724,26 @@ function onFolderContext(event: MouseEvent, folder: AnnotatedBookmark): void {
     {
       label: "New subfolder",
       icon: "📁",
-      action: () => {
-        const name = prompt("Folder name:");
-        if (name) {
-          sendMessage({ type: "createFolder", parentId: folder.id, title: name }).then(() => refreshState());
+      action: async () => {
+        // Expand parent if collapsed
+        collapsedFolders.delete(folder.id);
+        const result = await sendMessage({ type: "createFolder", parentId: folder.id, title: "New folder" }) as { id?: string };
+        if (result?.id) {
+          editAfterRenderId = result.id;
         }
+        await refreshState();
       },
     },
     {
       label: "Rename",
       icon: "✏️",
       action: () => {
-        const newTitle = prompt("New name:", folder.title);
-        if (newTitle && newTitle !== folder.title) {
-          chrome.bookmarks.update(folder.id, { title: newTitle });
-          refreshState();
+        const nameEl = document.querySelector(`.folder-item[data-folder-id="${folder.id}"] .folder-name`) as HTMLElement;
+        if (nameEl) {
+          editInPlace(nameEl, folder.title, (newTitle) => {
+            chrome.bookmarks.update(folder.id, { title: newTitle });
+            refreshState();
+          });
         }
       },
     },
@@ -697,10 +777,12 @@ function onBookmarkContext(event: MouseEvent, item: AnnotatedBookmark): void {
       label: "Rename",
       icon: "✏️",
       action: () => {
-        const newTitle = prompt("New name:", item.title);
-        if (newTitle && newTitle !== item.title) {
-          chrome.bookmarks.update(item.id, { title: newTitle });
-          refreshState();
+        const titleEl = document.querySelector(`.tab-item[data-bookmark-id="${item.id}"] .tab-title`) as HTMLElement;
+        if (titleEl) {
+          editInPlace(titleEl, item.title, (newTitle) => {
+            chrome.bookmarks.update(item.id, { title: newTitle });
+            refreshState();
+          });
         }
       },
     },
