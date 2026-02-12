@@ -10,9 +10,7 @@
     "sidePanel",
     "favicon",
     "storage",
-    "activeTab",
-    "scripting",
-    "clipboardWrite"
+    "offscreen"
   ],
   "side_panel": {
     "default_path": "sidepanel.html"

@@ -388,12 +388,18 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === "copy-url") {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id && tab.url) {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: (url: string) => navigator.clipboard.writeText(url),
-        args: [tab.url],
-      });
+    if (tab?.url) {
+      // Use offscreen document to access clipboard API
+      try {
+        await chrome.offscreen.createDocument({
+          url: "offscreen.html",
+          reasons: [chrome.offscreen.Reason.CLIPBOARD],
+          justification: "Copy URL to clipboard",
+        });
+      } catch {
+        // Document may already exist
+      }
+      await chrome.runtime.sendMessage({ type: "clipboard-write", text: tab.url });
     }
   }
 });
