@@ -353,9 +353,8 @@ chrome.bookmarks.onChanged.addListener(async (id, changeInfo) => {
 // Side panel communication
 // ---------------------------------------------------------------------------
 
-chrome.action.onClicked.addListener(async (tab) => {
-  await chrome.sidePanel.open({ tabId: tab.id! });
-});
+// Open side panel when toolbar icon is clicked (or keyboard shortcut)
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   handleMessage(message).then(sendResponse).catch((err) => {
