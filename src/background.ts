@@ -45,7 +45,20 @@ async function init(): Promise<void> {
   await findOtherBookmarksFolder();
   await loadPinnedIds();
   await rebuildAssociations();
+  await recoverGroupIds();
   await notifySidePanel();
+}
+
+/** Recover existing tab group IDs after service worker restart. */
+async function recoverGroupIds(): Promise<void> {
+  const pinnedGroups = await chrome.tabGroups.query({ title: "📌 Pinned" });
+  if (pinnedGroups.length > 0) {
+    pinnedGroupId = pinnedGroups[0].id;
+  }
+  const bookmarkedGroups = await chrome.tabGroups.query({ title: "📚 Bookmarks" });
+  if (bookmarkedGroups.length > 0) {
+    bookmarkedGroupId = bookmarkedGroups[0].id;
+  }
 }
 
 async function findOtherBookmarksFolder(): Promise<void> {
@@ -99,10 +112,25 @@ async function ensureGroup(
       // Group was closed
     }
   }
-  // Find an existing group with our label
+  // Find existing groups with our label and consolidate duplicates
   const groups = await chrome.tabGroups.query({ title: label });
   if (groups.length > 0) {
-    return groups[0].id;
+    const keepGroup = groups[0];
+    // Merge tabs from duplicate groups into the first one
+    for (let i = 1; i < groups.length; i++) {
+      try {
+        const tabs = await chrome.tabs.query({ groupId: groups[i].id });
+        if (tabs.length > 0) {
+          await chrome.tabs.group({
+            tabIds: tabs.map((t) => t.id!),
+            groupId: keepGroup.id,
+          });
+        }
+      } catch {
+        // Group may have been auto-removed
+      }
+    }
+    return keepGroup.id;
   }
   // Will be created when first tab is added
   return -1;
