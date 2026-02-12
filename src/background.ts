@@ -356,6 +356,20 @@ chrome.bookmarks.onChanged.addListener(async (id, changeInfo) => {
 // Open side panel when toolbar icon is clicked (or keyboard shortcut)
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
+// Keyboard command handlers
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === "copy-url") {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id && tab.url) {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: (url: string) => navigator.clipboard.writeText(url),
+        args: [tab.url],
+      });
+    }
+  }
+});
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   handleMessage(message).then(sendResponse).catch((err) => {
     console.error("handleMessage error:", err);

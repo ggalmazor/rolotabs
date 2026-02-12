@@ -9,7 +9,9 @@
     "tabGroups",
     "sidePanel",
     "favicon",
-    "storage"
+    "storage",
+    "scripting",
+    "clipboardWrite"
   ],
   "side_panel": {
     "default_path": "sidepanel.html"
@@ -39,6 +41,13 @@
         "mac": "Alt+S"
       },
       "description": "Toggle Rolotabs side panel"
+    },
+    "copy-url": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+C",
+        "mac": "Command+Shift+C"
+      },
+      "description": "Copy current tab URL to clipboard"
     }
   },
   "minimum_chrome_version": "114"
