@@ -30,7 +30,7 @@ export class BookmarkIndex {
   private roots: ManagedBookmark[] = [];
 
   // Root folder ID (Other Bookmarks)
-  rootFolderId: string = "2";
+  rootFolderId: string = "";
 
   // ---------------------------------------------------------------------------
   // Rebuild — full refresh from Chrome APIs

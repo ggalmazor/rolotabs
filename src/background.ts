@@ -12,7 +12,7 @@ import type { BookmarkNode, TabInfo } from "./lib/types.ts";
 // ---------------------------------------------------------------------------
 
 const index = new BookmarkIndex();
-let otherBookmarksFolderId: string = "2";
+let otherBookmarksFolderId: string = "";
 
 // ---------------------------------------------------------------------------
 // Initialization
@@ -43,7 +43,7 @@ async function findOtherBookmarksFolder(): Promise<void> {
   const other = tree[0].children!.find(
     (n) => n.title === "Other Bookmarks" || n.title === "Other bookmarks",
   );
-  otherBookmarksFolderId = other?.id ?? tree[0].children![1]?.id ?? "2";
+  otherBookmarksFolderId = other?.id ?? tree[0].children![1]?.id ?? tree[0].children![0]?.id ?? "0";
 }
 
 // ---------------------------------------------------------------------------
