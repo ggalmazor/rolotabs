@@ -4,7 +4,7 @@
 // Renders the three-zone sidebar and handles user interactions.
 
 import type { ManagedBookmark, OpenTab, PanelState } from "./lib/types.ts";
-import { type MenuEntry, showContextMenu } from "./lib/context-menu.ts";
+import { showContextMenu } from "./lib/context-menu.ts";
 import { hideDropIndicator, showFolderDropGhost } from "./lib/drop-indicator.ts";
 import { urlsMatch } from "./lib/urls.ts";
 import { editInPlace } from "./ui/edit-in-place.ts";
@@ -284,16 +284,10 @@ function renderBookmarks(roots: ManagedBookmark[]): void {
 
   if (!list.dataset.contextMenuSet) {
     list.dataset.contextMenuSet = "true";
-    list.addEventListener("contextmenu", async (e) => {
+    list.addEventListener("contextmenu", (e) => {
       if ((e.target as HTMLElement).closest(".tab-item, .folder-header")) return;
       e.preventDefault();
-
-      const { folders, currentRootId } = await sendMessage({ type: "getBookmarkFolders" }) as {
-        folders: { id: string; title: string }[];
-        currentRootId: string;
-      };
-
-      const entries: MenuEntry[] = [
+      showContextMenu(e.clientX, e.clientY, [
         {
           label: "New folder",
           icon: "📁",
@@ -310,25 +304,7 @@ function renderBookmarks(roots: ManagedBookmark[]): void {
             await refreshState();
           },
         },
-        { separator: true },
-      ];
-
-      for (const folder of folders) {
-        entries.push({
-          label: folder.id === currentRootId
-            ? `✓ ${folder.title || "Untitled"}`
-            : `  ${folder.title || "Untitled"}`,
-          icon: "📂",
-          action: folder.id === currentRootId
-            ? () => {}
-            : () =>
-              sendMessage({ type: "setRootFolder", folderId: folder.id }).then(() =>
-                refreshState()
-              ),
-        });
-      }
-
-      showContextMenu(e.clientX, e.clientY, entries);
+      ]);
     });
   }
 

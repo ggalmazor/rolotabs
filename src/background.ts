@@ -22,7 +22,7 @@ chrome.runtime.onStartup.addListener(() => init());
 init(); // Also init when service worker wakes up
 
 async function init(): Promise<void> {
-  await loadRootFolder();
+  await findOtherBookmarksFolder();
   const pinnedIds = await loadPinnedIds();
   const tree = await chrome.bookmarks.getTree();
   const tabs = await queryTabs();
@@ -38,26 +38,12 @@ async function init(): Promise<void> {
   await notifySidePanel();
 }
 
-/** Load root folder from storage, or discover "Other Bookmarks" as default. */
-async function loadRootFolder(): Promise<void> {
-  const stored = await chrome.storage.local.get("rootFolderId");
-  if (stored.rootFolderId) {
-    // Validate the stored folder still exists
-    try {
-      await chrome.bookmarks.get(stored.rootFolderId as string);
-      otherBookmarksFolderId = stored.rootFolderId as string;
-      return;
-    } catch {
-      // Folder was deleted — fall through to discovery
-    }
-  }
-
+async function findOtherBookmarksFolder(): Promise<void> {
   const tree = await chrome.bookmarks.getTree();
   const other = tree[0].children!.find(
     (n) => n.title === "Other Bookmarks" || n.title === "Other bookmarks",
   );
   otherBookmarksFolderId = other?.id ?? tree[0].children![1]?.id ?? tree[0].children![0]?.id ?? "0";
-  await chrome.storage.local.set({ rootFolderId: otherBookmarksFolderId });
 }
 
 // ---------------------------------------------------------------------------
@@ -456,35 +442,6 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
 
     case "getPinnedIds":
       return index.getPinnedIds();
-
-    case "setRootFolder": {
-      const folderId = message.folderId as string;
-      // Validate the folder exists
-      await chrome.bookmarks.get(folderId);
-      otherBookmarksFolderId = folderId;
-      await chrome.storage.local.set({ rootFolderId: folderId });
-      // Rebuild with new root
-      const tree = await chrome.bookmarks.getTree();
-      const tabs = await queryTabs();
-      index.rebuild(
-        tree[0].children as BookmarkNode[] ?? [],
-        tabs,
-        index.getPinnedIds(),
-        otherBookmarksFolderId,
-      );
-      await notifySidePanel();
-      return await getState();
-    }
-
-    case "getBookmarkFolders": {
-      // Return top-level bookmark folders for the settings picker
-      const tree = await chrome.bookmarks.getTree();
-      const folders: { id: string; title: string }[] = [];
-      for (const root of tree[0].children ?? []) {
-        folders.push({ id: root.id, title: root.title });
-      }
-      return { folders, currentRootId: otherBookmarksFolderId };
-    }
 
     default:
       return null;

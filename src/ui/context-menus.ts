@@ -81,14 +81,6 @@ export function onFolderContext(event: MouseEvent, folder: ManagedBookmark): voi
         }
       },
     },
-    {
-      label: "Use as root folder",
-      icon: "📂",
-      action: () =>
-        delegate.sendMessage({ type: "setRootFolder", folderId: folder.id }).then(() =>
-          delegate.refreshState()
-        ),
-    },
     { separator: true },
     {
       label: "Delete folder",
