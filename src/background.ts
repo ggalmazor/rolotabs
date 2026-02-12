@@ -532,6 +532,30 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       return await getFullState();
     }
 
+    case "reorderOpenTab": {
+      const tabId = message.tabId as number;
+      const toIndex = message.toIndex as number;
+      // Get current open tabs in order to find the target Chrome tab index
+      const currentTabs = await chrome.tabs.query({});
+      const openTabsList = getOpenTabs(
+        currentTabs.map((t) => ({ id: t.id!, url: t.url, title: t.title, favIconUrl: t.favIconUrl })),
+        tabToBookmark,
+        null,
+      );
+      // Find the Chrome index to move to
+      if (toIndex < openTabsList.length) {
+        const targetTabId = openTabsList[toIndex].tabId;
+        const targetTab = currentTabs.find((t) => t.id === targetTabId);
+        if (targetTab) {
+          await chrome.tabs.move(tabId, { index: targetTab.index });
+        }
+      } else {
+        // Move to end
+        await chrome.tabs.move(tabId, { index: -1 });
+      }
+      return await getFullState();
+    }
+
     case "reorderBookmark": {
       const bookmarkId = message.bookmarkId as string;
       const parentId = message.parentId as string;

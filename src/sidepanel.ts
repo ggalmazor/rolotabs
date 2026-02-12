@@ -10,6 +10,7 @@ import { showDropIndicator, showGridDropIndicator, hideDropIndicator, showFolder
 let state: PanelState | null = null;
 let collapsedFolders = new Set<string>();
 let editAfterRenderId: string | null = null;
+let onboardingDismissed = false;
 
 // ---------------------------------------------------------------------------
 // Initialization
@@ -20,6 +21,11 @@ async function init(): Promise<void> {
   if (stored.collapsedFolders) {
     collapsedFolders = new Set(stored.collapsedFolders as string[]);
   }
+
+  // Suppress default context menu everywhere
+  document.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+  });
 
   // Track drag state globally for CSS
   document.addEventListener("dragstart", (e) => {
@@ -66,6 +72,18 @@ async function init(): Promise<void> {
     });
   });
 
+  // Load onboarding dismissed state
+  const onboardingStored = await chrome.storage.local.get("onboardingDismissed");
+  onboardingDismissed = !!onboardingStored.onboardingDismissed;
+
+  // Close button for onboarding
+  document.getElementById("onboarding-close")!.addEventListener("click", () => {
+    onboardingDismissed = true;
+    chrome.storage.local.set({ onboardingDismissed: true });
+    const el = document.getElementById("onboarding");
+    if (el) el.style.display = "none";
+  });
+
   state = await sendMessage({ type: "getState" }) as PanelState;
   render();
 }
@@ -94,12 +112,10 @@ function sendMessage(message: { type: string; [key: string]: unknown }): Promise
 function render(): void {
   if (!state) return;
 
-  // Show onboarding if no pinned items and no bookmarks
+  // Show onboarding unless previously dismissed
   const onboarding = document.getElementById("onboarding");
-  const isEmpty = state.pinned.length === 0 &&
-    state.bookmarks.every((b) => !b.children || b.children.length === 0);
-  if (onboarding) {
-    onboarding.style.display = isEmpty ? "" : "none";
+  if (onboarding && !onboardingDismissed) {
+    onboarding.style.display = "";
   }
 
   renderPinned(state.pinned);
@@ -422,6 +438,8 @@ function renderOpenTabs(openTabs: OpenTab[]): void {
 
     list.appendChild(el);
   }
+
+  setupOpenTabReorderDropZone(list);
 }
 
 function onOpenTabContext(event: MouseEvent, tab: OpenTab, allTabs: OpenTab[]): void {
@@ -510,9 +528,13 @@ function setupUnbookmarkDropZone(element: HTMLElement): void {
     e.preventDefault();
     e.dataTransfer!.dropEffect = "move";
     if (document.body.classList.contains("is-dragging-inactive")) {
-      showDangerDropGhost(element, "🗑");
+      // Inactive bookmark: fixed danger ghost at top
+      const list = document.getElementById("unlinked-list")!;
+      showDangerDropGhost(list, "delete bookmark");
     } else {
-      showUnbookmarkDropGhost(element, "📂✕");
+      // Active bookmark: positional ghost, user picks order
+      const list = document.getElementById("unlinked-list")!;
+      showDropIndicator(list, e.clientY);
     }
   });
 
@@ -532,6 +554,58 @@ function setupUnbookmarkDropZone(element: HTMLElement): void {
     const data = JSON.parse(raw);
 
     if (data.type === "bookmark") {
+      await sendMessage({ type: "unbookmarkTab", bookmarkId: data.bookmarkId });
+      await refreshState();
+    }
+  });
+}
+
+function setupOpenTabReorderDropZone(list: HTMLElement): void {
+  if (list.dataset.reorderZone) return;
+  list.dataset.reorderZone = "true";
+
+  list.addEventListener("dragover", (e) => {
+    const raw = e.dataTransfer!.types.includes("application/rolotabs");
+    if (!raw) return;
+
+    if (document.body.classList.contains("is-dragging-from-zone3")) {
+      // Reorder within zone 3
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer!.dropEffect = "move";
+      pendingDropIndex = showDropIndicator(list, e.clientY);
+    } else if (document.body.classList.contains("is-dragging")) {
+      // Bookmark dragged from zone 2 — handle at list level too
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer!.dropEffect = "move";
+      if (document.body.classList.contains("is-dragging-inactive")) {
+        showDangerDropGhost(list, "delete bookmark");
+      } else {
+        pendingDropIndex = showDropIndicator(list, e.clientY);
+      }
+    }
+  });
+
+  list.addEventListener("dragleave", (e) => {
+    if (!list.contains(e.relatedTarget as Node)) {
+      hideDropIndicator();
+    }
+  });
+
+  list.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    hideDropIndicator();
+
+    const raw = e.dataTransfer!.getData("application/rolotabs");
+    if (!raw) return;
+    const data = JSON.parse(raw);
+
+    if (data.type === "openTab") {
+      await sendMessage({ type: "reorderOpenTab", tabId: data.tabId, toIndex: pendingDropIndex });
+      await refreshState();
+    } else if (data.type === "bookmark") {
       await sendMessage({ type: "unbookmarkTab", bookmarkId: data.bookmarkId });
       await refreshState();
     }

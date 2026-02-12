@@ -7,6 +7,22 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.7.0] — 2026-02-12
+
+### Added
+- **Onboarding always shown:** Onboarding welcome message now appears regardless
+  of bookmark state, with a ✕ close button. Dismissal persisted in storage.
+- **Zone 3 reordering:** Drag open tabs within zone 3 to reorder them
+  (reorders actual Chrome tabs via `chrome.tabs.move`).
+- **Suppress default context menu:** Right-clicking anywhere without a custom
+  menu no longer shows the browser's default context menu.
+
+### Changed
+- **Zone 2 → Zone 3 drop indicators:** Inactive bookmarks show a red "delete
+  bookmark" text ghost fixed at top. Active bookmarks show a positional ghost
+  for choosing placement order.
+- **Updated icons.**
+
 ## [0.6.0] — 2026-02-12
 
 ### Added
