@@ -10,6 +10,7 @@
     "sidePanel",
     "favicon",
     "storage",
+    "activeTab",
     "scripting",
     "clipboardWrite"
   ],
@@ -44,8 +45,8 @@
     },
     "copy-url": {
       "suggested_key": {
-        "default": "Ctrl+Shift+C",
-        "mac": "Command+Shift+C"
+        "default": "Alt+C",
+        "mac": "Alt+C"
       },
       "description": "Copy current tab URL to clipboard"
     }
