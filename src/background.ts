@@ -223,12 +223,21 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.url) {
     const oldBookmarkId = tabToBookmark.get(tabId);
     if (oldBookmarkId) {
+      // Temporarily break association to let tryAssociateTab find a new match
       bookmarkToTab.set(oldBookmarkId, null);
       tabToBookmark.delete(tabId);
+      const matched = await tryAssociateTab(tab);
+      if (!matched) {
+        // No other bookmark matched — restore original association
+        // (tab will show as "navigated away" in the UI)
+        bookmarkToTab.set(oldBookmarkId, tabId);
+        tabToBookmark.set(tabId, oldBookmarkId);
+      }
+    } else {
+      await tryAssociateTab(tab);
     }
-    await tryAssociateTab(tab);
   }
-  if (changeInfo.status === "complete" || changeInfo.title) {
+  if (changeInfo.status === "complete" || changeInfo.title || changeInfo.favIconUrl) {
     await notifySidePanel();
   }
 });
@@ -261,9 +270,9 @@ async function ungroupIfNotBookmarked(tab: chrome.tabs.Tab): Promise<void> {
   }
 }
 
-async function tryAssociateTab(tab: chrome.tabs.Tab): Promise<void> {
+async function tryAssociateTab(tab: chrome.tabs.Tab): Promise<boolean> {
   const url = tab.url || tab.pendingUrl;
-  if (!url) return;
+  if (!url) return false;
 
   for (const [bmId, tabId] of bookmarkToTab.entries()) {
     if (tabId !== null) continue;
@@ -272,12 +281,13 @@ async function tryAssociateTab(tab: chrome.tabs.Tab): Promise<void> {
       if (bm.url && urlsMatch(bm.url, url)) {
         bookmarkToTab.set(bmId, tab.id!);
         tabToBookmark.set(tab.id!, bmId);
-        return;
+        return true;
       }
     } catch {
       // bookmark may have been deleted
     }
   }
+  return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -532,6 +542,23 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       return await getFullState();
     }
 
+    case "replaceBookmarkUrl": {
+      const bookmarkId = message.bookmarkId as string;
+      const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (activeTab?.url) {
+        // Update bookmark URL and title
+        await chrome.bookmarks.update(bookmarkId, { url: activeTab.url, title: activeTab.title || activeTab.url });
+        // Update association: old tab mapping is stale, reassociate
+        const oldTabId = bookmarkToTab.get(bookmarkId);
+        if (oldTabId != null) {
+          tabToBookmark.delete(oldTabId);
+        }
+        bookmarkToTab.set(bookmarkId, activeTab.id!);
+        tabToBookmark.set(activeTab.id!, bookmarkId);
+      }
+      return await getFullState();
+    }
+
     case "reorderOpenTab": {
       const tabId = message.tabId as number;
       const toIndex = message.toIndex as number;
@@ -584,9 +611,19 @@ async function getFullState() {
   });
   const activeTabId = activeTabInfo?.id ?? null;
 
+  // Build tab favicon and URL maps for live updates
+  const tabFavIcons = new Map<number, string | undefined>();
+  const tabUrls = new Map<number, string | undefined>();
+  for (const t of allTabs) {
+    if (t.id) {
+      if (t.favIconUrl) tabFavIcons.set(t.id, t.favIconUrl);
+      if (t.url) tabUrls.set(t.id, t.url);
+    }
+  }
+
   // Annotate the full bookmark tree
   const annotatedRoots = rootChildren.map((n) =>
-    annotateNode(n as BookmarkNode, bookmarkToTab, activeTabId)
+    annotateNode(n as BookmarkNode, bookmarkToTab, activeTabId, tabFavIcons, tabUrls)
   );
 
   // Flatten for pinned lookup

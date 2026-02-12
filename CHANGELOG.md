@@ -7,6 +7,38 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.8.0] — 2026-02-12
+
+### Added
+- **Live favicons:** Zones 1 and 2 now show the tab's live favicon instead of
+  the cached Chrome favicon API, updating in real time as pages load.
+- **"Replace with current URL"** context menu option on bookmarks and pinned
+  items — updates the bookmark to the tab's current page URL.
+- **Draggable folders:** Folder headers can be dragged to reorder, move to root,
+  or nest inside other folders.
+- **Drop into collapsed folders:** Visual feedback (header highlight) when
+  dragging onto a collapsed folder. Drops work regardless of folder state.
+- **Zone 3 reordering:** Drag open tabs within zone 3 to reorder them
+  (reorders actual Chrome tabs).
+- **Navigated-away indicator:** Orange left border on bookmarks/pinned items
+  when the tab has navigated away from the bookmarked URL.
+- **Scroll to active tab:** The sidebar auto-scrolls to the focused tab on
+  tab switch.
+- **Peek in collapsed folders:** When the active tab is inside a collapsed
+  folder, it peeks below the folder header without expanding the full folder.
+- **Privacy policy** (`PRIVACY.md`).
+
+### Changed
+- **Tab association preserved on navigation:** Tabs that navigate away from
+  their bookmarked URL stay associated instead of appearing as duplicates
+  in zone 3.
+- **Onboarding always shown** with a ✕ dismiss button; dismissal persisted
+  in storage.
+- **Zone 2 → Zone 3 drop indicators:** Inactive bookmarks show "delete
+  bookmark" text ghost; active bookmarks show a positional ghost.
+- **Default context menu suppressed** everywhere.
+- **Updated icons.**
+
 ## [0.7.0] — 2026-02-12
 
 ### Added

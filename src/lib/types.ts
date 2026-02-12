@@ -27,6 +27,8 @@ export interface AnnotatedBookmark {
   tabId: number | null;
   isLoaded: boolean;
   isActive: boolean;
+  favIconUrl?: string;
+  tabUrl?: string;
   children?: AnnotatedBookmark[];
 }
 

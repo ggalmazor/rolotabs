@@ -6,6 +6,7 @@
 import type { AnnotatedBookmark, OpenTab, PanelState } from "./lib/types.ts";
 import { showContextMenu, type MenuEntry } from "./lib/context-menu.ts";
 import { showDropIndicator, showGridDropIndicator, hideDropIndicator, showFolderDropGhost, showDangerDropGhost, showUnbookmarkDropGhost } from "./lib/drop-indicator.ts";
+import { urlsMatch } from "./lib/urls.ts";
 
 let state: PanelState | null = null;
 let collapsedFolders = new Set<string>();
@@ -121,6 +122,14 @@ function render(): void {
   renderPinned(state.pinned);
   renderBookmarks(state.bookmarks);
   renderOpenTabs(state.openTabs);
+
+  // Scroll the active item into view
+  requestAnimationFrame(() => {
+    const active = document.querySelector(".tab-item.is-active, .pinned-item.is-active");
+    if (active) {
+      active.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  });
 }
 
 // ----- Zone 1: Pinned grid -----
@@ -142,12 +151,15 @@ function renderPinned(pinned: AnnotatedBookmark[]): void {
     el.className = "pinned-item";
     if (item.isLoaded) el.classList.add("is-loaded");
     if (item.isActive) el.classList.add("is-active");
+    if (item.isLoaded && item.tabUrl && !urlsMatch(item.url, item.tabUrl)) {
+      el.classList.add("is-navigated");
+    }
     el.title = item.title;
     el.dataset.bookmarkId = item.id;
 
     const img = document.createElement("img");
     img.className = "favicon";
-    img.src = faviconUrl(item.url);
+    img.src = item.favIconUrl || faviconUrl(item.url);
     img.alt = "";
     img.onerror = () => { img.src = "icons/icon16.png"; };
 
@@ -273,7 +285,19 @@ function renderFolder(folder: AnnotatedBookmark): HTMLElement {
     onFolderContext(e, folder);
   });
 
-  // Folder header is a drop target for moving bookmarks into it
+  // Make folder draggable
+  header.draggable = true;
+  header.addEventListener("dragstart", (e) => {
+    e.stopPropagation();
+    e.dataTransfer!.setData(
+      "application/rolotabs",
+      JSON.stringify({ type: "bookmark", bookmarkId: folder.id, isFolder: true }),
+    );
+    container.classList.add("dragging");
+  });
+  header.addEventListener("dragend", () => container.classList.remove("dragging"));
+
+  // Folder header is a drop target for moving bookmarks/folders into it
   header.addEventListener("dragover", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -289,6 +313,12 @@ function renderFolder(folder: AnnotatedBookmark): HTMLElement {
     e.preventDefault();
     e.stopPropagation();
     hideDropIndicator();
+
+    const raw = e.dataTransfer!.getData("application/rolotabs");
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    // Prevent dropping a folder into itself
+    if (data.bookmarkId === folder.id) return;
     await handleDropOnFolder(e, folder.id);
   });
 
@@ -310,7 +340,31 @@ function renderFolder(folder: AnnotatedBookmark): HTMLElement {
 
   container.appendChild(children);
 
+  // Show active items peeking out of collapsed folders
+  if (isCollapsed) {
+    const activeItems = findActiveItems(folder);
+    for (const item of activeItems) {
+      const peekEl = renderTabItem(item);
+      peekEl.classList.add("is-peek");
+      container.appendChild(peekEl);
+    }
+  }
+
   return container;
+}
+
+/** Recursively find active (focused) non-folder items within a folder tree. */
+function findActiveItems(folder: AnnotatedBookmark): AnnotatedBookmark[] {
+  const result: AnnotatedBookmark[] = [];
+  if (!folder.children) return result;
+  for (const child of folder.children) {
+    if (child.isFolder) {
+      result.push(...findActiveItems(child));
+    } else if (child.isActive) {
+      result.push(child);
+    }
+  }
+  return result;
 }
 
 function renderTabItem(item: AnnotatedBookmark): HTMLElement {
@@ -318,11 +372,14 @@ function renderTabItem(item: AnnotatedBookmark): HTMLElement {
   el.className = "tab-item";
   if (item.isLoaded) el.classList.add("is-loaded");
   if (item.isActive) el.classList.add("is-active");
+  if (item.isLoaded && item.tabUrl && !urlsMatch(item.url, item.tabUrl)) {
+    el.classList.add("is-navigated");
+  }
   el.dataset.bookmarkId = item.id;
 
   const img = document.createElement("img");
   img.className = "favicon";
-  img.src = faviconUrl(item.url);
+  img.src = item.favIconUrl || faviconUrl(item.url);
   img.alt = "";
   img.onerror = () => { img.src = "icons/icon16.png"; };
 
@@ -553,7 +610,7 @@ function setupUnbookmarkDropZone(element: HTMLElement): void {
     if (!raw) return;
     const data = JSON.parse(raw);
 
-    if (data.type === "bookmark") {
+    if (data.type === "bookmark" && !data.isFolder) {
       await sendMessage({ type: "unbookmarkTab", bookmarkId: data.bookmarkId });
       await refreshState();
     }
@@ -605,7 +662,7 @@ function setupOpenTabReorderDropZone(list: HTMLElement): void {
     if (data.type === "openTab") {
       await sendMessage({ type: "reorderOpenTab", tabId: data.tabId, toIndex: pendingDropIndex });
       await refreshState();
-    } else if (data.type === "bookmark") {
+    } else if (data.type === "bookmark" && !data.isFolder) {
       await sendMessage({ type: "unbookmarkTab", bookmarkId: data.bookmarkId });
       await refreshState();
     }
@@ -851,6 +908,11 @@ function onPinnedContext(event: MouseEvent, item: AnnotatedBookmark): void {
       icon: "📌",
       action: () => sendMessage({ type: "unpinBookmark", bookmarkId: item.id }).then(() => refreshState()),
     },
+    {
+      label: "Replace with current URL",
+      icon: "🔗",
+      action: () => sendMessage({ type: "replaceBookmarkUrl", bookmarkId: item.id }).then(() => refreshState()),
+    },
     { separator: true },
     {
       label: "Delete bookmark",
@@ -914,6 +976,11 @@ function onBookmarkContext(event: MouseEvent, item: AnnotatedBookmark): void {
       label: "Pin to top",
       icon: "📌",
       action: () => sendMessage({ type: "pinBookmark", bookmarkId: item.id }).then(() => refreshState()),
+    },
+    {
+      label: "Replace with current URL",
+      icon: "🔗",
+      action: () => sendMessage({ type: "replaceBookmarkUrl", bookmarkId: item.id }).then(() => refreshState()),
     },
     {
       label: "Rename",

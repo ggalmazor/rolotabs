@@ -57,6 +57,8 @@ export function annotateNode(
   node: BookmarkNode,
   bookmarkToTab: Map<string, number | null>,
   activeTabId: number | null,
+  tabFavIcons?: Map<number, string | undefined>,
+  tabUrls?: Map<number, string | undefined>,
 ): AnnotatedBookmark {
   const tabId = bookmarkToTab.get(node.id) ?? null;
   const result: AnnotatedBookmark = {
@@ -70,9 +72,17 @@ export function annotateNode(
     isLoaded: tabId != null,
     isActive: tabId != null && tabId === activeTabId,
   };
+  if (tabId != null && tabFavIcons) {
+    const icon = tabFavIcons.get(tabId);
+    if (icon) result.favIconUrl = icon;
+  }
+  if (tabId != null && tabUrls) {
+    const url = tabUrls.get(tabId);
+    if (url) result.tabUrl = url;
+  }
   if (node.children) {
     result.children = node.children.map((c) =>
-      annotateNode(c, bookmarkToTab, activeTabId)
+      annotateNode(c, bookmarkToTab, activeTabId, tabFavIcons, tabUrls)
     );
   }
   return result;

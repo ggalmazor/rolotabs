@@ -107,19 +107,26 @@ export function showGridDropIndicator(container: HTMLElement, x: number, y: numb
  * Show a ghost in a folder header area (drop into folder).
  */
 export function showFolderDropGhost(folderHeader: HTMLElement, label?: string): void {
-  const g = getGhost();
-  detachGhost();
-  g.textContent = label || "";
-  g.className = "drop-ghost drop-ghost-folder";
-  g.style.display = "";
-
-  // Insert after the folder header
   const parent = folderHeader.parentElement!;
-  const children = parent.querySelector(".folder-children");
-  if (children) {
-    children.insertBefore(g, children.firstChild);
+  const childrenEl = parent.querySelector(".folder-children");
+  const isCollapsed = childrenEl?.classList.contains("collapsed");
+
+  if (isCollapsed) {
+    // Highlight the folder header itself when collapsed
+    detachGhost();
+    folderHeader.classList.add("drop-target");
   } else {
-    parent.appendChild(g);
+    const g = getGhost();
+    detachGhost();
+    g.textContent = label || "";
+    g.className = "drop-ghost drop-ghost-folder";
+    g.style.display = "";
+
+    if (childrenEl) {
+      childrenEl.insertBefore(g, childrenEl.firstChild);
+    } else {
+      parent.appendChild(g);
+    }
   }
 }
 
@@ -150,4 +157,6 @@ export function hideDropIndicator(): void {
     ghost.style.display = "none";
     detachGhost();
   }
+  // Clear any folder header drop-target highlights
+  document.querySelectorAll(".drop-target").forEach((el) => el.classList.remove("drop-target"));
 }

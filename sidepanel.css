@@ -311,6 +311,29 @@ body.is-dragging .empty-state {
   font-weight: 500;
 }
 
+/* Navigated away from bookmarked URL */
+.tab-item.is-navigated {
+  border-left: 2px solid var(--accent, #e8a642);
+  padding-left: 6px;
+}
+
+.pinned-item.is-navigated {
+  outline: 2px dashed var(--accent, #e8a642);
+  outline-offset: -2px;
+}
+
+/* Peek: active item shown below collapsed folder */
+.tab-item.is-peek {
+  margin-left: 16px;
+  opacity: 0.85;
+  border-left: 2px solid var(--text-dim);
+  padding-left: 6px;
+}
+
+.tab-item.is-peek.is-navigated {
+  border-left: 2px solid var(--accent, #e8a642);
+}
+
 .tab-item .close-btn {
   flex-shrink: 0;
   width: 16px;
@@ -378,10 +401,17 @@ body.is-dragging .empty-state {
   display: none;
 }
 
+.folder-header.drop-target {
+  background: var(--ghost-bg);
+  border: 1px dashed var(--ghost-border);
+  border-radius: var(--radius-sm);
+}
+
 /* ----- Drag and drop ----- */
 
 
-.tab-item.dragging {
+.tab-item.dragging,
+.folder-item.dragging {
   opacity: 0.4;
 }
 
