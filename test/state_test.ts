@@ -1,14 +1,14 @@
-import { assertEquals } from "jsr:@std/assert";
-import { describe, it } from "jsr:@std/testing/bdd";
+import { assertEquals } from "@std/assert";
+import { describe, it } from "@std/testing/bdd";
 import {
-  buildAssociations,
-  findMatchingBookmark,
   annotateNode,
-  getOpenTabs,
-  flattenBookmarkTree,
-  isUnderRoot,
-  getPinnedBookmarks,
+  buildAssociations,
   filterPinnedFromTree,
+  findMatchingBookmark,
+  flattenBookmarkTree,
+  getOpenTabs,
+  getPinnedBookmarks,
+  isUnderRoot,
 } from "../src/lib/state.ts";
 import type { ManagedBookmark } from "../src/lib/types.ts";
 
@@ -97,7 +97,13 @@ describe("findMatchingBookmark", () => {
 describe("annotateNode", () => {
   it("annotates a loaded, active bookmark", () => {
     const bookmarkToTab = new Map<string, number | null>([["bm1", 5]]);
-    const node = { id: "bm1", title: "Example", url: "https://example.com", parentId: "p1", index: 0 };
+    const node = {
+      id: "bm1",
+      title: "Example",
+      url: "https://example.com",
+      parentId: "p1",
+      index: 0,
+    };
 
     const result = annotateNode(node, bookmarkToTab, 5);
 
@@ -109,7 +115,13 @@ describe("annotateNode", () => {
 
   it("annotates an unloaded bookmark", () => {
     const bookmarkToTab = new Map<string, number | null>([["bm1", null]]);
-    const node = { id: "bm1", title: "Example", url: "https://example.com", parentId: "p1", index: 0 };
+    const node = {
+      id: "bm1",
+      title: "Example",
+      url: "https://example.com",
+      parentId: "p1",
+      index: 0,
+    };
 
     const result = annotateNode(node, bookmarkToTab, 5);
 
@@ -140,7 +152,13 @@ describe("annotateNode", () => {
 
   it("handles unknown bookmark (not in map)", () => {
     const bookmarkToTab = new Map<string, number | null>();
-    const node = { id: "bm99", title: "Unknown", url: "https://example.com", parentId: "p1", index: 0 };
+    const node = {
+      id: "bm99",
+      title: "Unknown",
+      url: "https://example.com",
+      parentId: "p1",
+      index: 0,
+    };
 
     const result = annotateNode(node, bookmarkToTab, null);
 
@@ -188,9 +206,36 @@ describe("getOpenTabs", () => {
 
 describe("getPinnedBookmarks", () => {
   const bookmarks: ManagedBookmark[] = [
-    { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
-    { id: "bm2", title: "B", url: "https://b.com", isFolder: false, tabId: 1, isLoaded: true, isPinned: false, isActive: true },
-    { id: "bm3", title: "C", url: "https://c.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
+    {
+      id: "bm1",
+      title: "A",
+      url: "https://a.com",
+      isFolder: false,
+      tabId: null,
+      isLoaded: false,
+      isPinned: false,
+      isActive: false,
+    },
+    {
+      id: "bm2",
+      title: "B",
+      url: "https://b.com",
+      isFolder: false,
+      tabId: 1,
+      isLoaded: true,
+      isPinned: false,
+      isActive: true,
+    },
+    {
+      id: "bm3",
+      title: "C",
+      url: "https://c.com",
+      isFolder: false,
+      tabId: null,
+      isLoaded: false,
+      isPinned: false,
+      isActive: false,
+    },
   ];
 
   it("returns pinned bookmarks in pinnedIds order", () => {
@@ -214,8 +259,26 @@ describe("getPinnedBookmarks", () => {
 describe("filterPinnedFromTree", () => {
   it("removes pinned leaf nodes from the tree", () => {
     const tree: ManagedBookmark[] = [
-      { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
-      { id: "bm2", title: "B", url: "https://b.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
+      {
+        id: "bm1",
+        title: "A",
+        url: "https://a.com",
+        isFolder: false,
+        tabId: null,
+        isLoaded: false,
+        isPinned: false,
+        isActive: false,
+      },
+      {
+        id: "bm2",
+        title: "B",
+        url: "https://b.com",
+        isFolder: false,
+        tabId: null,
+        isLoaded: false,
+        isPinned: false,
+        isActive: false,
+      },
     ];
     const result = filterPinnedFromTree(tree, new Set(["bm1"]));
     assertEquals(result.length, 1);
@@ -225,10 +288,34 @@ describe("filterPinnedFromTree", () => {
   it("removes pinned nodes from nested folders", () => {
     const tree: ManagedBookmark[] = [
       {
-        id: "folder1", title: "Folder", isFolder: true, tabId: null, isLoaded: false, isPinned: false, isActive: false,
+        id: "folder1",
+        title: "Folder",
+        isFolder: true,
+        tabId: null,
+        isLoaded: false,
+        isPinned: false,
+        isActive: false,
         children: [
-          { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
-          { id: "bm2", title: "B", url: "https://b.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
+          {
+            id: "bm1",
+            title: "A",
+            url: "https://a.com",
+            isFolder: false,
+            tabId: null,
+            isLoaded: false,
+            isPinned: false,
+            isActive: false,
+          },
+          {
+            id: "bm2",
+            title: "B",
+            url: "https://b.com",
+            isFolder: false,
+            tabId: null,
+            isLoaded: false,
+            isPinned: false,
+            isActive: false,
+          },
         ],
       },
     ];
@@ -241,9 +328,24 @@ describe("filterPinnedFromTree", () => {
   it("does not remove folders even if their ID is in pinnedIds", () => {
     const tree: ManagedBookmark[] = [
       {
-        id: "folder1", title: "Folder", isFolder: true, tabId: null, isLoaded: false, isPinned: false, isActive: false,
+        id: "folder1",
+        title: "Folder",
+        isFolder: true,
+        tabId: null,
+        isLoaded: false,
+        isPinned: false,
+        isActive: false,
         children: [
-          { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
+          {
+            id: "bm1",
+            title: "A",
+            url: "https://a.com",
+            isFolder: false,
+            tabId: null,
+            isLoaded: false,
+            isPinned: false,
+            isActive: false,
+          },
         ],
       },
     ];
@@ -254,7 +356,16 @@ describe("filterPinnedFromTree", () => {
 
   it("returns tree unchanged when no IDs are pinned", () => {
     const tree: ManagedBookmark[] = [
-      { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
+      {
+        id: "bm1",
+        title: "A",
+        url: "https://a.com",
+        isFolder: false,
+        tabId: null,
+        isLoaded: false,
+        isPinned: false,
+        isActive: false,
+      },
     ];
     const result = filterPinnedFromTree(tree, new Set());
     assertEquals(result.length, 1);

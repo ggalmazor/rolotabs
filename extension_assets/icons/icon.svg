@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 128 128" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
-    <g transform="matrix(6.12323e-17,-1,-1,-6.12323e-17,130.783,128.423)">
-        <g transform="matrix(0.87545,0,0,1,-1.22691,-3.57453)">
-            <path d="M19.193,121.006L54.632,103.484L90.227,121.006L90.227,42.978L109.743,19.842L36.952,19.842C27.151,19.842 19.193,27.8 19.193,37.601L19.193,121.006Z" style="fill:rgb(246,115,0);stroke:white;stroke-width:6.65px;"/>
-        </g>
-        <g transform="matrix(1,0,0,1,58.5595,-3.70852)">
-            <path d="M19.193,78.793L54.71,78.793L54.71,37.601C54.71,27.8 46.753,19.842 36.952,19.842C27.151,19.842 19.193,27.8 19.193,37.601L19.193,78.793Z" style="fill:rgb(255,220,189);stroke:white;stroke-width:6.25px;"/>
-        </g>
+<svg
+  width="100%"
+  height="100%"
+  viewBox="0 0 128 128"
+  version="1.1"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xml:space="preserve"
+  xmlns:serif="http://www.serif.com/"
+  style="fill-rule: evenodd; clip-rule: evenodd; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 1.5"
+>
+  <g transform="matrix(6.12323e-17,-1,-1,-6.12323e-17,130.783,128.423)">
+    <g transform="matrix(0.87545,0,0,1,-1.22691,-3.57453)">
+      <path
+        d="M19.193,121.006L54.632,103.484L90.227,121.006L90.227,42.978L109.743,19.842L36.952,19.842C27.151,19.842 19.193,27.8 19.193,37.601L19.193,121.006Z"
+        style="fill: rgb(246, 115, 0); stroke: white; stroke-width: 6.65px"
+      />
     </g>
+    <g transform="matrix(1,0,0,1,58.5595,-3.70852)">
+      <path
+        d="M19.193,78.793L54.71,78.793L54.71,37.601C54.71,27.8 46.753,19.842 36.952,19.842C27.151,19.842 19.193,27.8 19.193,37.601L19.193,78.793Z"
+        style="fill: rgb(255, 220, 189); stroke: white; stroke-width: 6.25px"
+      />
+    </g>
+  </g>
 </svg>

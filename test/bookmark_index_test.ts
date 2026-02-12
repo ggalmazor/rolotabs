@@ -1,5 +1,5 @@
-import { describe, it, beforeEach } from "jsr:@std/testing/bdd";
-import { assertEquals } from "jsr:@std/assert";
+import { beforeEach, describe, it } from "@std/testing/bdd";
+import { assertEquals } from "@std/assert";
 import { BookmarkIndex } from "../src/lib/bookmark-index.ts";
 import type { BookmarkNode, TabInfo } from "../src/lib/types.ts";
 
@@ -303,7 +303,11 @@ describe("BookmarkIndex", () => {
     });
 
     it("reorderPinned moves items", () => {
-      const tree = makeTree(bm("a", "https://a.com"), bm("b", "https://b.com"), bm("c", "https://c.com"));
+      const tree = makeTree(
+        bm("a", "https://a.com"),
+        bm("b", "https://b.com"),
+        bm("c", "https://c.com"),
+      );
       index.rebuild(tree, [], ["a", "b", "c"], "2");
 
       index.reorderPinned("c", 0);

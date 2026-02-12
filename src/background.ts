@@ -4,7 +4,7 @@
 // Slim orchestrator: wires Chrome events to the BookmarkIndex and Grouping modules.
 
 import { BookmarkIndex } from "./lib/bookmark-index.ts";
-import { addTabToGroup, positionGroups, recoverGroupIds, ungroupIfNotManaged, ungroupTab } from "./lib/grouping.ts";
+import { addTabToGroup, recoverGroupIds, ungroupIfNotManaged, ungroupTab } from "./lib/grouping.ts";
 import type { BookmarkNode, TabInfo } from "./lib/types.ts";
 
 // ---------------------------------------------------------------------------
@@ -87,7 +87,10 @@ chrome.tabs.onCreated.addListener(async (tab) => {
     const url = tab.url || tab.pendingUrl;
     if (url && tab.id) {
       index.tryAssociateByUrl(tab.id, url, {
-        id: tab.id, url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl,
+        id: tab.id,
+        url: tab.url,
+        title: tab.title,
+        favIconUrl: tab.favIconUrl,
       });
     }
   }
@@ -109,7 +112,10 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.url) {
     index.handleTabNavigation(tabId, changeInfo.url, {
-      id: tabId, url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl,
+      id: tabId,
+      url: tab.url,
+      title: tab.title,
+      favIconUrl: tab.favIconUrl,
     });
   }
   if (changeInfo.favIconUrl || changeInfo.title) {
@@ -118,7 +124,9 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       title: changeInfo.title,
     });
   }
-  if (changeInfo.status === "complete" || changeInfo.title || changeInfo.favIconUrl || changeInfo.url) {
+  if (
+    changeInfo.status === "complete" || changeInfo.title || changeInfo.favIconUrl || changeInfo.url
+  ) {
     await notifySidePanel();
   }
 });
@@ -136,11 +144,16 @@ chrome.tabs.onActivated.addListener(async () => {
 // Bookmark events
 // ---------------------------------------------------------------------------
 
-chrome.bookmarks.onCreated.addListener(async (_id, bookmark) => {
+chrome.bookmarks.onCreated.addListener(async (_id, _bookmark) => {
   // Full rebuild to get tree structure right
   const tree = await chrome.bookmarks.getTree();
   const tabs = await queryTabs();
-  index.rebuild(tree[0].children as BookmarkNode[] ?? [], tabs, index.getPinnedIds(), otherBookmarksFolderId);
+  index.rebuild(
+    tree[0].children as BookmarkNode[] ?? [],
+    tabs,
+    index.getPinnedIds(),
+    otherBookmarksFolderId,
+  );
   await notifySidePanel();
 });
 
@@ -150,14 +163,24 @@ chrome.bookmarks.onRemoved.addListener(async (id) => {
   // Rebuild to fix tree structure
   const tree = await chrome.bookmarks.getTree();
   const tabs = await queryTabs();
-  index.rebuild(tree[0].children as BookmarkNode[] ?? [], tabs, index.getPinnedIds(), otherBookmarksFolderId);
+  index.rebuild(
+    tree[0].children as BookmarkNode[] ?? [],
+    tabs,
+    index.getPinnedIds(),
+    otherBookmarksFolderId,
+  );
   await notifySidePanel();
 });
 
 chrome.bookmarks.onMoved.addListener(async () => {
   const tree = await chrome.bookmarks.getTree();
   const tabs = await queryTabs();
-  index.rebuild(tree[0].children as BookmarkNode[] ?? [], tabs, index.getPinnedIds(), otherBookmarksFolderId);
+  index.rebuild(
+    tree[0].children as BookmarkNode[] ?? [],
+    tabs,
+    index.getPinnedIds(),
+    otherBookmarksFolderId,
+  );
   await notifySidePanel();
 });
 
@@ -222,7 +245,10 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       } else if (bm?.url) {
         const newTab = await chrome.tabs.create({ url: bm.url });
         index.associate(bookmarkId, newTab.id!, {
-          id: newTab.id!, url: newTab.url, title: newTab.title, favIconUrl: newTab.favIconUrl,
+          id: newTab.id!,
+          url: newTab.url,
+          title: newTab.title,
+          favIconUrl: newTab.favIconUrl,
         });
         await addTabToGroup(newTab.id!, bm.isPinned ? "pinned" : "bookmarked");
       }
@@ -289,8 +315,18 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       // Rebuild to get tree structure right
       const tree = await chrome.bookmarks.getTree();
       const tabs = await queryTabs();
-      index.rebuild(tree[0].children as BookmarkNode[] ?? [], tabs, index.getPinnedIds(), otherBookmarksFolderId);
-      index.associate(bm.id, tabId, { id: tabId, url: tab.url, title: tab.title, favIconUrl: tab.favIconUrl });
+      index.rebuild(
+        tree[0].children as BookmarkNode[] ?? [],
+        tabs,
+        index.getPinnedIds(),
+        otherBookmarksFolderId,
+      );
+      index.associate(bm.id, tabId, {
+        id: tabId,
+        url: tab.url,
+        title: tab.title,
+        favIconUrl: tab.favIconUrl,
+      });
       if (message.pinned) {
         index.pin(bm.id);
         await savePinnedIds();
@@ -313,7 +349,12 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       // Rebuild tree
       const tree = await chrome.bookmarks.getTree();
       const tabs = await queryTabs();
-      index.rebuild(tree[0].children as BookmarkNode[] ?? [], tabs, index.getPinnedIds(), otherBookmarksFolderId);
+      index.rebuild(
+        tree[0].children as BookmarkNode[] ?? [],
+        tabs,
+        index.getPinnedIds(),
+        otherBookmarksFolderId,
+      );
       return await getState();
     }
 
@@ -356,7 +397,10 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
         const tabs = await queryTabs();
         index.updateBookmarkUrl(bookmarkId, activeTab.url, tabs);
         index.associate(bookmarkId, activeTab.id!, {
-          id: activeTab.id!, url: activeTab.url, title: activeTab.title, favIconUrl: activeTab.favIconUrl,
+          id: activeTab.id!,
+          url: activeTab.url,
+          title: activeTab.title,
+          favIconUrl: activeTab.favIconUrl,
         });
       }
       return await getState();
@@ -387,7 +431,12 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       // Rebuild tree
       const tree = await chrome.bookmarks.getTree();
       const tabs = await queryTabs();
-      index.rebuild(tree[0].children as BookmarkNode[] ?? [], tabs, index.getPinnedIds(), otherBookmarksFolderId);
+      index.rebuild(
+        tree[0].children as BookmarkNode[] ?? [],
+        tabs,
+        index.getPinnedIds(),
+        otherBookmarksFolderId,
+      );
       return await getState();
     }
 
@@ -415,7 +464,7 @@ async function getState() {
 
 let notifyTimeout: ReturnType<typeof setTimeout> | null = null;
 
-async function notifySidePanel(): Promise<void> {
+function notifySidePanel(): void {
   if (notifyTimeout) clearTimeout(notifyTimeout);
   notifyTimeout = setTimeout(async () => {
     try {

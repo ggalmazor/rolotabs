@@ -2,19 +2,22 @@
 
 Your browsing rolodex — bookmarks that come alive as tabs.
 
-Rolotabs is a Chrome extension that turns your bookmarks into a persistent, always-visible sidebar. Each bookmark becomes a slot that can be loaded (with a live tab) or unloaded (icon stays, tab is gone). Clicking always focuses the existing tab or opens a new one — never duplicates.
+Rolotabs is a Chrome extension that turns your bookmarks into a persistent, always-visible sidebar.
+Each bookmark becomes a slot that can be loaded (with a live tab) or unloaded (icon stays, tab is
+gone). Clicking always focuses the existing tab or opens a new one — never duplicates.
 
 ## How it works
 
 The sidebar has three zones:
 
-| Zone | What | Where |
-|------|-------|-------|
-| **Pinned** | Compact icon grid of your most-used sites | Top |
+| Zone          | What                                       | Where  |
+| ------------- | ------------------------------------------ | ------ |
+| **Pinned**    | Compact icon grid of your most-used sites  | Top    |
 | **Bookmarks** | Hierarchical tree with collapsible folders | Middle |
-| **Open Tabs** | Tabs that aren't bookmarked yet | Bottom |
+| **Open Tabs** | Tabs that aren't bookmarked yet            | Bottom |
 
-Drag tabs between zones to organize them. All data is stored as regular Chrome bookmarks — synced across devices automatically.
+Drag tabs between zones to organize them. All data is stored as regular Chrome bookmarks — synced
+across devices automatically.
 
 ## Features
 
@@ -39,9 +42,9 @@ Drag tabs between zones to organize them. All data is stored as regular Chrome b
 
 ### Keyboard shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| **Alt+S** | Toggle the side panel |
+| Shortcut  | Action                                  |
+| --------- | --------------------------------------- |
+| **Alt+S** | Toggle the side panel                   |
 | **Alt+C** | Copy the current tab's URL to clipboard |
 
 To customize shortcuts:
@@ -53,11 +56,13 @@ To customize shortcuts:
 
 ### Updating
 
-To update, download the new zip, replace the files in the same folder, and click the ↻ refresh icon on the Rolotabs card at `chrome://extensions/`.
+To update, download the new zip, replace the files in the same folder, and click the ↻ refresh icon
+on the Rolotabs card at `chrome://extensions/`.
 
 ## Privacy & Security
 
-Rolotabs does not collect, transmit, or share any user data. All data stays on your device as regular Chrome bookmarks and local storage. No analytics, no tracking, no remote code.
+Rolotabs does not collect, transmit, or share any user data. All data stays on your device as
+regular Chrome bookmarks and local storage. No analytics, no tracking, no remote code.
 
 See the full [Privacy Policy](PRIVACY.md).
 

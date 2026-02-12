@@ -27,7 +27,8 @@ If the icon isn't visible, click the puzzle piece (Extensions menu) and pin Rolo
 
 ### Folder structure creation
 
-- [ ] On first install, check `Other Bookmarks` → a `Rolotabs` folder should exist with `Pinned` and `Tabs` subfolders
+- [ ] On first install, check `Other Bookmarks` → a `Rolotabs` folder should exist with `Pinned` and
+      `Tabs` subfolders
 - [ ] Uninstall and reinstall — folders should be reused, not duplicated
 
 ### Zone 1 — Pinned grid
@@ -45,7 +46,8 @@ If the icon isn't visible, click the puzzle piece (Extensions menu) and pin Rolo
 - [ ] Click a bookmarked tab (loaded) → existing tab focuses
 - [ ] × button on a loaded tab → closes the Chrome tab, bookmark stays (item goes dim)
 - [ ] × button on an unloaded tab → removes the bookmark entirely
-- [ ] Create a subfolder in `Rolotabs/Tabs/` via Chrome's bookmark manager → it should appear as a collapsible folder in zone 2
+- [ ] Create a subfolder in `Rolotabs/Tabs/` via Chrome's bookmark manager → it should appear as a
+      collapsible folder in zone 2
 - [ ] Click folder header → toggles collapse; state persists across panel close/reopen
 
 ### Zone 3 — Unlinked tabs
@@ -67,7 +69,8 @@ If the icon isn't visible, click the puzzle piece (Extensions menu) and pin Rolo
 
 ### Active tab tracking
 
-- [ ] Switch between tabs → the active one shows highlighted background in whichever zone it belongs to
+- [ ] Switch between tabs → the active one shows highlighted background in whichever zone it belongs
+      to
 - [ ] Switch to a tab in another window → side panel should still update (may need to reopen panel)
 
 ### External changes
@@ -81,7 +84,8 @@ If the icon isn't visible, click the puzzle piece (Extensions menu) and pin Rolo
 - [ ] Open 20+ tabs → unlinked zone should list them all (zone 2 scrolls, zone 3 is at the bottom)
 - [ ] Bookmark the same URL twice in Rolotabs → only the first should associate with the open tab
 - [ ] Open a URL that matches a bookmark, then navigate away → association should break
-- [ ] Service worker idle restart: close the side panel, wait a minute, reopen → state should rebuild correctly
+- [ ] Service worker idle restart: close the side panel, wait a minute, reopen → state should
+      rebuild correctly
 
 ## Inspecting the service worker
 
@@ -92,5 +96,7 @@ If the icon isn't visible, click the puzzle piece (Extensions menu) and pin Rolo
 ## Common issues
 
 - **Side panel won't open:** Make sure `sidePanel` permission is in manifest and Chrome ≥ 114
-- **Favicons are broken:** The `favicon` permission is required; also favicons only load after the page has been visited at least once in Chrome's history
-- **State feels stale:** The service worker may have restarted — check if `init()` ran (log in console)
+- **Favicons are broken:** The `favicon` permission is required; also favicons only load after the
+  page has been visited at least once in Chrome's history
+- **State feels stale:** The service worker may have restarted — check if `init()` ran (log in
+  console)

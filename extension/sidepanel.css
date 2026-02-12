@@ -380,7 +380,6 @@ body.is-dragging .empty-state {
   background: var(--bg-hover);
 }
 
-
 .folder-arrow {
   font-size: 14px;
   width: 18px;
@@ -408,7 +407,6 @@ body.is-dragging .empty-state {
 }
 
 /* ----- Drag and drop ----- */
-
 
 .tab-item.dragging,
 .folder-item.dragging {

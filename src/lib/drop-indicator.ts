@@ -33,7 +33,7 @@ export function showDropIndicator(container: HTMLElement, y: number, label?: str
   g.style.display = "";
 
   const children = Array.from(container.children).filter(
-    (c) => c !== ghost && !c.classList.contains("empty-state")
+    (c) => c !== ghost && !c.classList.contains("empty-state"),
   ) as HTMLElement[];
 
   if (children.length === 0) {
@@ -63,7 +63,12 @@ export function showDropIndicator(container: HTMLElement, y: number, label?: str
  * Show a ghost element at the drop position within a grid container.
  * Returns the insertion index.
  */
-export function showGridDropIndicator(container: HTMLElement, x: number, y: number, label?: string): number {
+export function showGridDropIndicator(
+  container: HTMLElement,
+  x: number,
+  y: number,
+  label?: string,
+): number {
   const g = getGhost();
   detachGhost();
   g.textContent = label || "";
@@ -71,7 +76,7 @@ export function showGridDropIndicator(container: HTMLElement, x: number, y: numb
   g.style.display = "";
 
   const children = Array.from(container.children).filter(
-    (c) => c !== ghost && !c.classList.contains("pinned-grid-empty")
+    (c) => c !== ghost && !c.classList.contains("pinned-grid-empty"),
   ) as HTMLElement[];
 
   if (children.length === 0) {

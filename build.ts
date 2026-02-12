@@ -6,7 +6,7 @@
  *   deno run -A build.ts --watch  # rebuild on changes
  */
 
-import * as esbuild from "npm:esbuild@0.24";
+import * as esbuild from "esbuild";
 
 const isWatch = Deno.args.includes("--watch");
 

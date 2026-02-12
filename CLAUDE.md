@@ -2,17 +2,23 @@
 
 ## What is this?
 
-Rolotabs is a Chrome extension (Manifest V3) that reimagines bookmarks as a persistent sidebar tab manager. All state is stored as Chrome bookmarks — no opaque extension storage.
+Rolotabs is a Chrome extension (Manifest V3) that reimagines bookmarks as a persistent sidebar tab
+manager. All state is stored as Chrome bookmarks — no opaque extension storage.
 
 ## Architecture
 
-- **`background.js`** — Service worker. Manages bookmark folder structure (`Other Bookmarks/Rolotabs/{Pinned,Tabs}/`), handles Chrome events (tabs, bookmarks), serves state to the side panel via `chrome.runtime.onMessage`. Imports pure logic from `lib/`.
-- **`sidepanel.{html,css,js}`** — The sidebar UI rendered in Chrome's Side Panel API. Three zones: Pinned (icon grid), Bookmarked tabs (hierarchical list), Unlinked (ephemeral tabs). Drag-and-drop between zones.
+- **`background.js`** — Service worker. Manages bookmark folder structure
+  (`Other Bookmarks/Rolotabs/{Pinned,Tabs}/`), handles Chrome events (tabs, bookmarks), serves state
+  to the side panel via `chrome.runtime.onMessage`. Imports pure logic from `lib/`.
+- **`sidepanel.{html,css,js}`** — The sidebar UI rendered in Chrome's Side Panel API. Three zones:
+  Pinned (icon grid), Bookmarked tabs (hierarchical list), Unlinked (ephemeral tabs). Drag-and-drop
+  between zones.
 - **`lib/`** — Pure, testable modules extracted from the extension code:
   - `lib/urls.js` — URL comparison utilities
   - `lib/state.js` — State management: association building, tree annotation, filtering
 - **`test/`** — Tests using Node's built-in test runner (`node:test`)
-- **`manifest.json`** — Manifest V3 definition. Permissions: bookmarks, tabs, sidePanel, favicon, storage.
+- **`manifest.json`** — Manifest V3 definition. Permissions: bookmarks, tabs, sidePanel, favicon,
+  storage.
 
 ## Versioning
 
@@ -23,10 +29,12 @@ Rolotabs is a Chrome extension (Manifest V3) that reimagines bookmarks as a pers
 
 ## Key design decisions
 
-- **Bookmarks as source of truth** — no sync layer, no IndexedDB; Chrome bookmark sync handles cross-device.
+- **Bookmarks as source of truth** — no sync layer, no IndexedDB; Chrome bookmark sync handles
+  cross-device.
 - **TypeScript + Deno** — native TS, no tsconfig needed. esbuild bundles to plain JS for Chrome.
 - **Dark theme only** (for now) — CSS custom properties in `:root`.
-- **Testable core** — all pure logic lives in `src/lib/` and is tested with Deno's test runner. Chrome API interactions stay in `src/background.ts`/`src/sidepanel.ts`.
+- **Testable core** — all pure logic lives in `src/lib/` and is tested with Deno's test runner.
+  Chrome API interactions stay in `src/background.ts`/`src/sidepanel.ts`.
 
 ## TDD workflow — MANDATORY
 
@@ -41,13 +49,16 @@ Rolotabs is a Chrome extension (Manifest V3) that reimagines bookmarks as a pers
 
 ### What to test
 
-- **All pure logic in `lib/`** — URL matching, state building, tree operations, filtering. These are easy and valuable.
+- **All pure logic in `lib/`** — URL matching, state building, tree operations, filtering. These are
+  easy and valuable.
 - **Message handler logic** — extract into testable functions when adding new message types.
-- **Edge cases first** — null inputs, empty arrays, duplicate URLs, circular references. These are where bugs hide.
+- **Edge cases first** — null inputs, empty arrays, duplicate URLs, circular references. These are
+  where bugs hide.
 
 ### What NOT to test (for now)
 
-- Chrome API calls directly (`chrome.bookmarks.*`, `chrome.tabs.*`) — these are integration-level and need a real browser.
+- Chrome API calls directly (`chrome.bookmarks.*`, `chrome.tabs.*`) — these are integration-level
+  and need a real browser.
 - DOM rendering in `sidepanel.js` — visual testing is manual until we add a UI test framework.
 - CSS — manual visual inspection.
 
@@ -86,7 +97,8 @@ deno task lint         # lint source
 - Semicolons — used consistently throughout
 - Functions are plain `async function name()` style, not arrow-assigned
 - Keep it simple: no abstractions until they earn their place
-- Extract pure logic into `src/lib/` — Chrome API glue stays in `src/background.ts` and `src/sidepanel.ts`
+- Extract pure logic into `src/lib/` — Chrome API glue stays in `src/background.ts` and
+  `src/sidepanel.ts`
 - Use `deno fmt` for formatting, `deno lint` for linting
 
 ## File structure
@@ -121,11 +133,15 @@ icons/                 # Extension icons (16, 32, 48, 128)
 
 ## Things to watch out for
 
-- `chrome.bookmarks.getTree()` returns "Other Bookmarks" with inconsistent casing across platforms — code handles both.
+- `chrome.bookmarks.getTree()` returns "Other Bookmarks" with inconsistent casing across platforms —
+  code handles both.
 - Service worker can go idle; `init()` is called at top level to handle wake-ups.
-- `isUnderRoot()` walks up the bookmark tree — has a depth guard (maxDepth=20) to prevent infinite loops.
+- `isUnderRoot()` walks up the bookmark tree — has a depth guard (maxDepth=20) to prevent infinite
+  loops.
 - Context menu currently uses `prompt()` — placeholder, needs a proper custom menu (Phase 3).
 - URL matching (`urlsMatch`) strips trailing slashes and fragments but keeps query strings.
-- Bug found by tests: `annotateNode` would mark unloaded bookmarks as "active" when `activeTabId` was null — fixed with null guard.
-- Chrome types come from `npm:chrome-types` via `/// <reference types="..." />` in the extension source files.
+- Bug found by tests: `annotateNode` would mark unloaded bookmarks as "active" when `activeTabId`
+  was null — fixed with null guard.
+- Chrome types come from `npm:chrome-types` via `/// <reference types="..." />` in the extension
+  source files.
 - esbuild bundles to IIFE format targeting Chrome 114+ — no ES module loading in service workers.

@@ -4,9 +4,12 @@
 
 - **`extension/manifest.json`** — Manifest V3, Chrome 114+
 - **`src/background.ts`** — Service worker: bookmark↔tab mapping, tab grouping, state management
-- **`src/sidepanel.ts`** — Sidebar UI: three-zone rendering, drag-and-drop, context menus, edit-in-place
-- **`src/lib/`** — Pure, testable modules: types, URL matching, state building, context menus, drop indicators
-- **`extension/sidepanel.html/css`** — Sidebar markup and styles (CSS custom properties, light/dark themes)
+- **`src/sidepanel.ts`** — Sidebar UI: three-zone rendering, drag-and-drop, context menus,
+  edit-in-place
+- **`src/lib/`** — Pure, testable modules: types, URL matching, state building, context menus, drop
+  indicators
+- **`extension/sidepanel.html/css`** — Sidebar markup and styles (CSS custom properties, light/dark
+  themes)
 
 Built with **Deno** (native TypeScript) + **esbuild** (~10ms builds). No frameworks.
 
@@ -28,17 +31,21 @@ deno task fmt      # Format
 deno task lint     # Lint
 ```
 
-After changes, reload the extension at `chrome://extensions/` and reopen the side panel. The side panel keeps stale JS, so closing and reopening it is important.
+After changes, reload the extension at `chrome://extensions/` and reopen the side panel. The side
+panel keeps stale JS, so closing and reopening it is important.
 
 ### Inspecting
 
-- **Service worker:** Click the "service worker" link on the extension card at `chrome://extensions/`
+- **Service worker:** Click the "service worker" link on the extension card at
+  `chrome://extensions/`
 - **Side panel:** Right-click inside the panel → Inspect
 
 ## Key design decisions
 
-- **Bookmarks as source of truth** — no sync layer, no IndexedDB. Chrome bookmark sync handles cross-device.
-- **Testable core** — all pure logic lives in `src/lib/` and is tested with Deno's test runner. Chrome API interactions stay in `src/background.ts` and `src/sidepanel.ts`.
+- **Bookmarks as source of truth** — no sync layer, no IndexedDB. Chrome bookmark sync handles
+  cross-device.
+- **Testable core** — all pure logic lives in `src/lib/` and is tested with Deno's test runner.
+  Chrome API interactions stay in `src/background.ts` and `src/sidepanel.ts`.
 - **No abstractions until they earn their place** — keep it simple.
 
 ## Versioning & releases

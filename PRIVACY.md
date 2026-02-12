@@ -28,12 +28,16 @@ Rolotabs accesses the following Chrome APIs to function:
 
 ## Where data is stored
 
-All data is stored locally on your device using Chrome's built-in bookmark system and `chrome.storage.local`. Bookmark data syncs across your devices through Chrome's own sync feature — Rolotabs has no involvement in or access to that process.
+All data is stored locally on your device using Chrome's built-in bookmark system and
+`chrome.storage.local`. Bookmark data syncs across your devices through Chrome's own sync feature —
+Rolotabs has no involvement in or access to that process.
 
 ## Changes to this policy
 
-If this policy changes, the update will be posted here with a new date. Since Rolotabs collects no data, meaningful changes are unlikely.
+If this policy changes, the update will be posted here with a new date. Since Rolotabs collects no
+data, meaningful changes are unlikely.
 
 ## Contact
 
-If you have questions, open an issue at [github.com/ggalmazor/rolotabs](https://github.com/ggalmazor/rolotabs/issues).
+If you have questions, open an issue at
+[github.com/ggalmazor/rolotabs](https://github.com/ggalmazor/rolotabs/issues).

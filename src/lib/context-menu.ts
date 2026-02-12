@@ -80,7 +80,9 @@ export function showContextMenu(x: number, y: number, entries: MenuEntry[]): voi
 
   // Position: keep within viewport
   const rect = menu.getBoundingClientRect();
+  // deno-lint-ignore no-window
   const maxX = window.innerWidth - rect.width - 4;
+  // deno-lint-ignore no-window
   const maxY = window.innerHeight - rect.height - 4;
   menu.style.left = `${Math.min(x, maxX)}px`;
   menu.style.top = `${Math.min(y, maxY)}px`;

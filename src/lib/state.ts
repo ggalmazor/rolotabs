@@ -1,11 +1,5 @@
 import { urlsMatch } from "./urls.ts";
-import type {
-  ManagedBookmark,
-  Associations,
-  BookmarkNode,
-  TabInfo,
-  OpenTab,
-} from "./types.ts";
+import type { Associations, BookmarkNode, ManagedBookmark, OpenTab, TabInfo } from "./types.ts";
 
 /**
  * Build bookmark→tab and tab→bookmark maps from bookmarks and tabs.
@@ -18,7 +12,7 @@ export function buildAssociations(bookmarks: BookmarkNode[], tabs: TabInfo[]): A
     if (!bm.url) continue; // skip folders
 
     const matchingTab = tabs.find(
-      (t) => urlsMatch(t.url, bm.url) && !tabToBookmark.has(t.id)
+      (t) => urlsMatch(t.url, bm.url) && !tabToBookmark.has(t.id),
     );
     if (matchingTab) {
       bookmarkToTab.set(bm.id, matchingTab.id);

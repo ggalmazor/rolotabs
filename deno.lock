@@ -3,8 +3,10 @@
   "specifiers": {
     "jsr:@std/assert@*": "1.0.18",
     "jsr:@std/assert@^1.0.17": "1.0.18",
+    "jsr:@std/assert@^1.0.18": "1.0.18",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/testing@*": "1.0.17",
+    "jsr:@std/testing@^1.0.17": "1.0.17",
     "npm:chrome-types@*": "0.1.415",
     "npm:esbuild@0.24": "0.24.2"
   },
@@ -187,5 +189,12 @@
       "scripts": true,
       "bin": true
     }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/assert@^1.0.18",
+      "jsr:@std/testing@^1.0.17",
+      "npm:esbuild@0.24"
+    ]
   }
 }

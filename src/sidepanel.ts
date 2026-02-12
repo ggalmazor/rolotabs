@@ -4,8 +4,14 @@
 // Renders the three-zone sidebar and handles user interactions.
 
 import type { ManagedBookmark, OpenTab, PanelState } from "./lib/types.ts";
-import { showContextMenu, type MenuEntry } from "./lib/context-menu.ts";
-import { showDropIndicator, showGridDropIndicator, hideDropIndicator, showFolderDropGhost, showDangerDropGhost, showUnbookmarkDropGhost } from "./lib/drop-indicator.ts";
+import { type MenuEntry, showContextMenu } from "./lib/context-menu.ts";
+import {
+  hideDropIndicator,
+  showDangerDropGhost,
+  showDropIndicator,
+  showFolderDropGhost,
+  showGridDropIndicator,
+} from "./lib/drop-indicator.ts";
 import { urlsMatch } from "./lib/urls.ts";
 
 let state: PanelState | null = null;
@@ -54,7 +60,11 @@ async function init(): Promise<void> {
   // Create folder button — creates "New folder" and enters edit mode
   document.getElementById("create-folder-btn")!.addEventListener("click", async () => {
     if (!state?.rootFolderId) return;
-    const result = await sendMessage({ type: "createFolder", parentId: state.rootFolderId, title: "New folder" }) as { id?: string };
+    const result = await sendMessage({
+      type: "createFolder",
+      parentId: state.rootFolderId,
+      title: "New folder",
+    }) as { id?: string };
     if (result?.id) {
       editAfterRenderId = result.id;
     }
@@ -93,6 +103,7 @@ chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
   if (message.type === "stateUpdated") {
     refreshState();
   }
+  return undefined;
 });
 
 async function refreshState(): Promise<void> {
@@ -161,7 +172,9 @@ function renderPinned(pinned: ManagedBookmark[]): void {
     img.className = "favicon";
     img.src = item.favIconUrl || faviconUrl(item.url);
     img.alt = "";
-    img.onerror = () => { img.src = "icons/icon16.png"; };
+    img.onerror = () => {
+      img.src = "icons/icon16.png";
+    };
 
     const dot = document.createElement("div");
     dot.className = "status-dot";
@@ -227,7 +240,11 @@ function renderBookmarks(roots: ManagedBookmark[]): void {
           icon: "📁",
           action: async () => {
             if (!state?.rootFolderId) return;
-            const result = await sendMessage({ type: "createFolder", parentId: state.rootFolderId, title: "New folder" }) as { id?: string };
+            const result = await sendMessage({
+              type: "createFolder",
+              parentId: state.rootFolderId,
+              title: "New folder",
+            }) as { id?: string };
             if (result?.id) {
               editAfterRenderId = result.id;
             }
@@ -381,7 +398,9 @@ function renderTabItem(item: ManagedBookmark): HTMLElement {
   img.className = "favicon";
   img.src = item.favIconUrl || faviconUrl(item.url);
   img.alt = "";
-  img.onerror = () => { img.src = "icons/icon16.png"; };
+  img.onerror = () => {
+    img.src = "icons/icon16.png";
+  };
 
   const title = document.createElement("span");
   title.className = "tab-title";
@@ -453,7 +472,9 @@ function renderOpenTabs(openTabs: OpenTab[]): void {
     img.className = "favicon";
     img.src = tab.favIconUrl || faviconUrl(tab.url);
     img.alt = "";
-    img.onerror = () => { img.src = "icons/icon16.png"; };
+    img.onerror = () => {
+      img.src = "icons/icon16.png";
+    };
 
     const title = document.createElement("span");
     title.className = "tab-title";
@@ -505,12 +526,18 @@ function onOpenTabContext(event: MouseEvent, tab: OpenTab, allTabs: OpenTab[]): 
     {
       label: "Pin",
       icon: "📌",
-      action: () => sendMessage({ type: "promoteTab", tabId: tab.tabId, pinned: true }).then(() => refreshState()),
+      action: () =>
+        sendMessage({ type: "promoteTab", tabId: tab.tabId, pinned: true }).then(() =>
+          refreshState()
+        ),
     },
     {
       label: "Bookmark",
       icon: "📚",
-      action: () => sendMessage({ type: "promoteTab", tabId: tab.tabId, parentId: state?.rootFolderId }).then(() => refreshState()),
+      action: () =>
+        sendMessage({ type: "promoteTab", tabId: tab.tabId, parentId: state?.rootFolderId }).then(
+          () => refreshState(),
+        ),
     },
     { separator: true },
     {
@@ -525,12 +552,15 @@ function onOpenTabContext(event: MouseEvent, tab: OpenTab, allTabs: OpenTab[]): 
       danger: true,
       action: () => {
         const targets = allTabs.slice(0, idx);
-        showConfirmToast(`Close ${targets.length} tab${targets.length > 1 ? "s" : ""} above?`, async () => {
-          for (const t of targets) {
-            await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
-          }
-          await refreshState();
-        });
+        showConfirmToast(
+          `Close ${targets.length} tab${targets.length > 1 ? "s" : ""} above?`,
+          async () => {
+            for (const t of targets) {
+              await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
+            }
+            await refreshState();
+          },
+        );
       },
     },
     {
@@ -539,12 +569,15 @@ function onOpenTabContext(event: MouseEvent, tab: OpenTab, allTabs: OpenTab[]): 
       danger: true,
       action: () => {
         const targets = allTabs.slice(idx + 1);
-        showConfirmToast(`Close ${targets.length} tab${targets.length > 1 ? "s" : ""} below?`, async () => {
-          for (const t of targets) {
-            await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
-          }
-          await refreshState();
-        });
+        showConfirmToast(
+          `Close ${targets.length} tab${targets.length > 1 ? "s" : ""} below?`,
+          async () => {
+            for (const t of targets) {
+              await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
+            }
+            await refreshState();
+          },
+        );
       },
     },
     {
@@ -553,12 +586,15 @@ function onOpenTabContext(event: MouseEvent, tab: OpenTab, allTabs: OpenTab[]): 
       danger: true,
       action: () => {
         const targets = allTabs.filter((t) => t.tabId !== tab.tabId);
-        showConfirmToast(`Close ${targets.length} other tab${targets.length > 1 ? "s" : ""}?`, async () => {
-          for (const t of targets) {
-            await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
-          }
-          await refreshState();
-        });
+        showConfirmToast(
+          `Close ${targets.length} other tab${targets.length > 1 ? "s" : ""}?`,
+          async () => {
+            for (const t of targets) {
+              await sendMessage({ type: "closeOpenTab", tabId: t.tabId });
+            }
+            await refreshState();
+          },
+        );
       },
     },
   ];
@@ -722,7 +758,11 @@ function setupDropZone(element: HTMLElement, zone: "pinned" | "bookmarks"): void
       if (target === "pinned") {
         // If already pinned, reorder; otherwise pin
         if (state?.pinnedIds.includes(data.bookmarkId)) {
-          await sendMessage({ type: "reorderPinned", bookmarkId: data.bookmarkId, toIndex: pendingDropIndex });
+          await sendMessage({
+            type: "reorderPinned",
+            bookmarkId: data.bookmarkId,
+            toIndex: pendingDropIndex,
+          });
         } else {
           await sendMessage({ type: "pinBookmark", bookmarkId: data.bookmarkId });
         }
@@ -730,7 +770,12 @@ function setupDropZone(element: HTMLElement, zone: "pinned" | "bookmarks"): void
         // Unpin if pinned, move to root at the drop position
         await sendMessage({ type: "unpinBookmark", bookmarkId: data.bookmarkId });
         if (state?.rootFolderId) {
-          await sendMessage({ type: "reorderBookmark", bookmarkId: data.bookmarkId, parentId: state.rootFolderId, index: pendingDropIndex });
+          await sendMessage({
+            type: "reorderBookmark",
+            bookmarkId: data.bookmarkId,
+            parentId: state.rootFolderId,
+            index: pendingDropIndex,
+          });
         }
       }
     }
@@ -892,7 +937,12 @@ async function handleDropOnFolder(e: DragEvent, folderId: string): Promise<void>
   if (data.type === "openTab") {
     await sendMessage({ type: "promoteTab", tabId: data.tabId, parentId: folderId });
   } else if (data.type === "bookmark") {
-    await sendMessage({ type: "reorderBookmark", bookmarkId: data.bookmarkId, parentId: folderId, index: 0 });
+    await sendMessage({
+      type: "reorderBookmark",
+      bookmarkId: data.bookmarkId,
+      parentId: folderId,
+      index: 0,
+    });
   }
   await refreshState();
 }
@@ -906,12 +956,14 @@ function onPinnedContext(event: MouseEvent, item: ManagedBookmark): void {
     {
       label: "Unpin",
       icon: "📌",
-      action: () => sendMessage({ type: "unpinBookmark", bookmarkId: item.id }).then(() => refreshState()),
+      action: () =>
+        sendMessage({ type: "unpinBookmark", bookmarkId: item.id }).then(() => refreshState()),
     },
     {
       label: "Replace with current URL",
       icon: "🔗",
-      action: () => sendMessage({ type: "replaceBookmarkUrl", bookmarkId: item.id }).then(() => refreshState()),
+      action: () =>
+        sendMessage({ type: "replaceBookmarkUrl", bookmarkId: item.id }).then(() => refreshState()),
     },
     { separator: true },
     {
@@ -931,7 +983,11 @@ function onFolderContext(event: MouseEvent, folder: ManagedBookmark): void {
       action: async () => {
         // Expand parent if collapsed
         collapsedFolders.delete(folder.id);
-        const result = await sendMessage({ type: "createFolder", parentId: folder.id, title: "New folder" }) as { id?: string };
+        const result = await sendMessage({
+          type: "createFolder",
+          parentId: folder.id,
+          title: "New folder",
+        }) as { id?: string };
         if (result?.id) {
           editAfterRenderId = result.id;
         }
@@ -942,7 +998,9 @@ function onFolderContext(event: MouseEvent, folder: ManagedBookmark): void {
       label: "Rename",
       icon: "✏️",
       action: () => {
-        const nameEl = document.querySelector(`.folder-item[data-folder-id="${folder.id}"] .folder-name`) as HTMLElement;
+        const nameEl = document.querySelector(
+          `.folder-item[data-folder-id="${folder.id}"] .folder-name`,
+        ) as HTMLElement;
         if (nameEl) {
           editInPlace(nameEl, folder.title, (newTitle) => {
             chrome.bookmarks.update(folder.id, { title: newTitle });
@@ -975,18 +1033,22 @@ function onBookmarkContext(event: MouseEvent, item: ManagedBookmark): void {
     {
       label: "Pin to top",
       icon: "📌",
-      action: () => sendMessage({ type: "pinBookmark", bookmarkId: item.id }).then(() => refreshState()),
+      action: () =>
+        sendMessage({ type: "pinBookmark", bookmarkId: item.id }).then(() => refreshState()),
     },
     {
       label: "Replace with current URL",
       icon: "🔗",
-      action: () => sendMessage({ type: "replaceBookmarkUrl", bookmarkId: item.id }).then(() => refreshState()),
+      action: () =>
+        sendMessage({ type: "replaceBookmarkUrl", bookmarkId: item.id }).then(() => refreshState()),
     },
     {
       label: "Rename",
       icon: "✏️",
       action: () => {
-        const titleEl = document.querySelector(`.tab-item[data-bookmark-id="${item.id}"] .tab-title`) as HTMLElement;
+        const titleEl = document.querySelector(
+          `.tab-item[data-bookmark-id="${item.id}"] .tab-title`,
+        ) as HTMLElement;
         if (titleEl) {
           editInPlace(titleEl, item.title, (newTitle) => {
             chrome.bookmarks.update(item.id, { title: newTitle });
@@ -1013,7 +1075,9 @@ function faviconUrl(url?: string): string {
   if (!url) return "icons/icon16.png";
   try {
     new URL(url);
-    return `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`;
+    return `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${
+      encodeURIComponent(url)
+    }&size=32`;
   } catch {
     return "icons/icon16.png";
   }

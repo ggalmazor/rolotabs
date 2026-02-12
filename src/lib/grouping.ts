@@ -51,7 +51,7 @@ async function consolidateGroups(
 /** Ensure a group exists with the given label. Returns group ID or -1 if none exists. */
 async function ensureGroup(
   label: string,
-  color: string,
+  _color: string,
   currentGroupId: number | null,
 ): Promise<number> {
   if (currentGroupId !== null) {

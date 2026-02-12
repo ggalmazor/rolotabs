@@ -6,4 +6,5 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     document.execCommand("copy");
     sendResponse({ ok: true });
   }
+  return undefined;
 });
