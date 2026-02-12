@@ -1,0 +1,20 @@
+Rolotabs turns your bookmarks into a persistent, always-visible sidebar. Each bookmark becomes a slot that can be loaded (with a live tab) or unloaded (icon stays, tab is gone). Clicking always focuses the existing tab or opens a new one — never duplicates.
+
+How it works
+
+The sidebar has three zones:
+📌 Pinned (top): Compact icon grid of your most-used sites
+📚 Bookmarks (middle): Hierarchical tree with collapsible folders
+🔓 Open Tabs (bottom): Tabs that aren't bookmarked yet
+
+Drag tabs between zones to organize them. Drag folders to reorder or nest them.
+
+Features
+• Live favicons that update in real time
+• Keyboard shortcuts: Alt+S to toggle the sidebar, Alt+C to copy the current URL
+• Right-click menus for renaming, pinning, replacing URLs, and more
+• Navigated-away indicator when a tab drifts from its bookmarked URL
+• Active tab peek inside collapsed folders
+• Light and dark theme (follows your system)
+
+All data is stored as regular Chrome bookmarks — synced across devices automatically. No accounts, no servers, no tracking.
