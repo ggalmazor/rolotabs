@@ -131,7 +131,7 @@ export class BookmarkIndex {
       return managed;
     };
 
-    this.roots = tree[0].children?.map(annotate) ?? [];
+    this.roots = tree.map(annotate);
   }
 
   // ---------------------------------------------------------------------------
@@ -484,10 +484,13 @@ export class BookmarkIndex {
         .filter((n) => !pinnedSet.has(n.id) || n.isFolder)
         .map((n) => n.children ? { ...n, children: filterPinned(n.children) } : n);
 
-    const bookmarks = this.roots.map((root) => ({
-      ...root,
-      children: root.children ? filterPinned(root.children) : undefined,
-    }));
+    const rootFolder = this.roots.find((r) => r.id === this.rootFolderId);
+    const bookmarks = rootFolder
+      ? [{
+        ...rootFolder,
+        children: rootFolder.children ? filterPinned(rootFolder.children) : undefined,
+      }]
+      : [];
 
     // Zone 3: open tabs not matching any bookmark
     const openTabs: OpenTab[] = allTabs

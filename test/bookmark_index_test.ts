@@ -7,15 +7,14 @@ import type { BookmarkNode, TabInfo } from "../src/lib/types.ts";
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Mimics tree[0].children from chrome.bookmarks.getTree() — the array
+ *  of top-level folders (Bookmarks Bar, Other Bookmarks) that background.ts
+ *  passes to BookmarkIndex.rebuild(). */
 function makeTree(...children: BookmarkNode[]): BookmarkNode[] {
-  return [{
-    id: "0",
-    title: "root",
-    children: [
-      { id: "1", title: "Bookmarks Bar", children: [] },
-      { id: "2", title: "Other Bookmarks", children },
-    ],
-  }];
+  return [
+    { id: "1", title: "Bookmarks Bar", children: [] },
+    { id: "2", title: "Other Bookmarks", children },
+  ];
 }
 
 function tab(id: number, url: string, opts?: Partial<TabInfo>): TabInfo {
