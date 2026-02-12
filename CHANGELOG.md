@@ -7,6 +7,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.9.0] — 2026-02-12
+
+### Added
+- **Keyboard shortcut:** `Alt+S` toggles the side panel. Customizable at
+  `chrome://extensions/shortcuts`.
+
 ## [0.8.0] — 2026-02-12
 
 ### Added
