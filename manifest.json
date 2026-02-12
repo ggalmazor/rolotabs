@@ -32,5 +32,14 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+S",
+        "mac": "Alt+S"
+      },
+      "description": "Toggle Rolotabs side panel"
+    }
+  },
   "minimum_chrome_version": "114"
 }
