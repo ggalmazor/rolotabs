@@ -1,6 +1,6 @@
 import { urlsMatch } from "./urls.ts";
 import type {
-  AnnotatedBookmark,
+  ManagedBookmark,
   Associations,
   BookmarkNode,
   TabInfo,
@@ -59,9 +59,9 @@ export function annotateNode(
   activeTabId: number | null,
   tabFavIcons?: Map<number, string | undefined>,
   tabUrls?: Map<number, string | undefined>,
-): AnnotatedBookmark {
+): ManagedBookmark {
   const tabId = bookmarkToTab.get(node.id) ?? null;
-  const result: AnnotatedBookmark = {
+  const result: ManagedBookmark = {
     id: node.id,
     title: node.title,
     url: node.url,
@@ -71,6 +71,7 @@ export function annotateNode(
     tabId,
     isLoaded: tabId != null,
     isActive: tabId != null && tabId === activeTabId,
+    isPinned: false,
   };
   if (tabId != null && tabFavIcons) {
     const icon = tabFavIcons.get(tabId);
@@ -138,15 +139,15 @@ export function flattenBookmarkTree(rootNode: BookmarkNode): BookmarkNode[] {
  */
 export function getPinnedBookmarks(
   pinnedIds: string[],
-  allAnnotated: AnnotatedBookmark[],
-): AnnotatedBookmark[] {
-  const map = new Map<string, AnnotatedBookmark>();
+  allAnnotated: ManagedBookmark[],
+): ManagedBookmark[] {
+  const map = new Map<string, ManagedBookmark>();
   for (const bm of allAnnotated) {
     map.set(bm.id, bm);
   }
   return pinnedIds
     .map((id) => map.get(id))
-    .filter((bm): bm is AnnotatedBookmark => bm != null);
+    .filter((bm): bm is ManagedBookmark => bm != null);
 }
 
 /**
@@ -155,9 +156,9 @@ export function getPinnedBookmarks(
  * Empty folders that result from removal are kept.
  */
 export function filterPinnedFromTree(
-  nodes: AnnotatedBookmark[],
+  nodes: ManagedBookmark[],
   pinnedIds: Set<string>,
-): AnnotatedBookmark[] {
+): ManagedBookmark[] {
   return nodes
     .filter((node) => !pinnedIds.has(node.id) || node.isFolder)
     .map((node) => {

@@ -10,7 +10,7 @@ import {
   getPinnedBookmarks,
   filterPinnedFromTree,
 } from "../src/lib/state.ts";
-import type { AnnotatedBookmark } from "../src/lib/types.ts";
+import type { ManagedBookmark } from "../src/lib/types.ts";
 
 describe("buildAssociations", () => {
   it("associates bookmarks with matching tabs", () => {
@@ -187,10 +187,10 @@ describe("getOpenTabs", () => {
 });
 
 describe("getPinnedBookmarks", () => {
-  const bookmarks: AnnotatedBookmark[] = [
-    { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isActive: false },
-    { id: "bm2", title: "B", url: "https://b.com", isFolder: false, tabId: 1, isLoaded: true, isActive: true },
-    { id: "bm3", title: "C", url: "https://c.com", isFolder: false, tabId: null, isLoaded: false, isActive: false },
+  const bookmarks: ManagedBookmark[] = [
+    { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
+    { id: "bm2", title: "B", url: "https://b.com", isFolder: false, tabId: 1, isLoaded: true, isPinned: false, isActive: true },
+    { id: "bm3", title: "C", url: "https://c.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
   ];
 
   it("returns pinned bookmarks in pinnedIds order", () => {
@@ -213,9 +213,9 @@ describe("getPinnedBookmarks", () => {
 
 describe("filterPinnedFromTree", () => {
   it("removes pinned leaf nodes from the tree", () => {
-    const tree: AnnotatedBookmark[] = [
-      { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isActive: false },
-      { id: "bm2", title: "B", url: "https://b.com", isFolder: false, tabId: null, isLoaded: false, isActive: false },
+    const tree: ManagedBookmark[] = [
+      { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
+      { id: "bm2", title: "B", url: "https://b.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
     ];
     const result = filterPinnedFromTree(tree, new Set(["bm1"]));
     assertEquals(result.length, 1);
@@ -223,12 +223,12 @@ describe("filterPinnedFromTree", () => {
   });
 
   it("removes pinned nodes from nested folders", () => {
-    const tree: AnnotatedBookmark[] = [
+    const tree: ManagedBookmark[] = [
       {
-        id: "folder1", title: "Folder", isFolder: true, tabId: null, isLoaded: false, isActive: false,
+        id: "folder1", title: "Folder", isFolder: true, tabId: null, isLoaded: false, isPinned: false, isActive: false,
         children: [
-          { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isActive: false },
-          { id: "bm2", title: "B", url: "https://b.com", isFolder: false, tabId: null, isLoaded: false, isActive: false },
+          { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
+          { id: "bm2", title: "B", url: "https://b.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
         ],
       },
     ];
@@ -239,11 +239,11 @@ describe("filterPinnedFromTree", () => {
   });
 
   it("does not remove folders even if their ID is in pinnedIds", () => {
-    const tree: AnnotatedBookmark[] = [
+    const tree: ManagedBookmark[] = [
       {
-        id: "folder1", title: "Folder", isFolder: true, tabId: null, isLoaded: false, isActive: false,
+        id: "folder1", title: "Folder", isFolder: true, tabId: null, isLoaded: false, isPinned: false, isActive: false,
         children: [
-          { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isActive: false },
+          { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
         ],
       },
     ];
@@ -253,8 +253,8 @@ describe("filterPinnedFromTree", () => {
   });
 
   it("returns tree unchanged when no IDs are pinned", () => {
-    const tree: AnnotatedBookmark[] = [
-      { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isActive: false },
+    const tree: ManagedBookmark[] = [
+      { id: "bm1", title: "A", url: "https://a.com", isFolder: false, tabId: null, isLoaded: false, isPinned: false, isActive: false },
     ];
     const result = filterPinnedFromTree(tree, new Set());
     assertEquals(result.length, 1);

@@ -16,20 +16,37 @@ export interface TabInfo {
   favIconUrl?: string;
 }
 
-/** Bookmark annotated with live tab status. */
-export interface AnnotatedBookmark {
+/**
+ * A bookmark enriched with extension state (pinned, tab association, live tab info).
+ * This is the core model — a projection of Chrome's bookmark/tab state
+ * decorated with Rolotabs business logic.
+ */
+export interface ManagedBookmark {
   id: string;
   title: string;
   url?: string;
   parentId?: string;
   index?: number;
   isFolder: boolean;
+  children?: ManagedBookmark[];
+
+  // Extension state
+  isPinned: boolean;
+
+  // Tab association
   tabId: number | null;
   isLoaded: boolean;
   isActive: boolean;
-  favIconUrl?: string;
+
+  // Live tab state (when loaded)
   tabUrl?: string;
-  children?: AnnotatedBookmark[];
+  favIconUrl?: string;
+}
+
+/** The two Maps that track bookmark↔tab associations. */
+export interface Associations {
+  bookmarkToTab: Map<string, number | null>;
+  tabToBookmark: Map<number, string>;
 }
 
 /** An open tab shown in zone 3 (not matching any bookmark). */
@@ -39,19 +56,12 @@ export interface OpenTab {
   url?: string;
   favIconUrl?: string;
   isActive: boolean;
-  isBookmarked: boolean;
-}
-
-/** The two Maps that track bookmark↔tab associations. */
-export interface Associations {
-  bookmarkToTab: Map<string, number | null>;
-  tabToBookmark: Map<number, string>;
 }
 
 /** Full state sent from background to side panel. */
 export interface PanelState {
-  pinned: AnnotatedBookmark[];
-  bookmarks: AnnotatedBookmark[];
+  pinned: ManagedBookmark[];
+  bookmarks: ManagedBookmark[];
   openTabs: OpenTab[];
   activeTabId: number | null;
   pinnedIds: string[];

@@ -3,7 +3,7 @@
 // Rolotabs — Side Panel UI
 // Renders the three-zone sidebar and handles user interactions.
 
-import type { AnnotatedBookmark, OpenTab, PanelState } from "./lib/types.ts";
+import type { ManagedBookmark, OpenTab, PanelState } from "./lib/types.ts";
 import { showContextMenu, type MenuEntry } from "./lib/context-menu.ts";
 import { showDropIndicator, showGridDropIndicator, hideDropIndicator, showFolderDropGhost, showDangerDropGhost, showUnbookmarkDropGhost } from "./lib/drop-indicator.ts";
 import { urlsMatch } from "./lib/urls.ts";
@@ -134,7 +134,7 @@ function render(): void {
 
 // ----- Zone 1: Pinned grid -----
 
-function renderPinned(pinned: AnnotatedBookmark[]): void {
+function renderPinned(pinned: ManagedBookmark[]): void {
   const grid = document.getElementById("pinned-grid")!;
   grid.innerHTML = "";
 
@@ -193,7 +193,7 @@ function renderPinned(pinned: AnnotatedBookmark[]): void {
 
 // ----- Zone 2: All bookmarks -----
 
-function renderBookmarks(roots: AnnotatedBookmark[]): void {
+function renderBookmarks(roots: ManagedBookmark[]): void {
   const list = document.getElementById("tabs-list")!;
   list.innerHTML = "";
 
@@ -241,7 +241,7 @@ function renderBookmarks(roots: AnnotatedBookmark[]): void {
   setupDropZone(list, "bookmarks");
 }
 
-function renderFolder(folder: AnnotatedBookmark): HTMLElement {
+function renderFolder(folder: ManagedBookmark): HTMLElement {
   const container = document.createElement("div");
   container.className = "folder-item";
   container.dataset.folderId = folder.id;
@@ -354,8 +354,8 @@ function renderFolder(folder: AnnotatedBookmark): HTMLElement {
 }
 
 /** Recursively find active (focused) non-folder items within a folder tree. */
-function findActiveItems(folder: AnnotatedBookmark): AnnotatedBookmark[] {
-  const result: AnnotatedBookmark[] = [];
+function findActiveItems(folder: ManagedBookmark): ManagedBookmark[] {
+  const result: ManagedBookmark[] = [];
   if (!folder.children) return result;
   for (const child of folder.children) {
     if (child.isFolder) {
@@ -367,7 +367,7 @@ function findActiveItems(folder: AnnotatedBookmark): AnnotatedBookmark[] {
   return result;
 }
 
-function renderTabItem(item: AnnotatedBookmark): HTMLElement {
+function renderTabItem(item: ManagedBookmark): HTMLElement {
   const el = document.createElement("div");
   el.className = "tab-item";
   if (item.isLoaded) el.classList.add("is-loaded");
@@ -901,7 +901,7 @@ async function handleDropOnFolder(e: DragEvent, folderId: string): Promise<void>
 // Context menus
 // ---------------------------------------------------------------------------
 
-function onPinnedContext(event: MouseEvent, item: AnnotatedBookmark): void {
+function onPinnedContext(event: MouseEvent, item: ManagedBookmark): void {
   showContextMenu(event.clientX, event.clientY, [
     {
       label: "Unpin",
@@ -923,7 +923,7 @@ function onPinnedContext(event: MouseEvent, item: AnnotatedBookmark): void {
   ]);
 }
 
-function onFolderContext(event: MouseEvent, folder: AnnotatedBookmark): void {
+function onFolderContext(event: MouseEvent, folder: ManagedBookmark): void {
   const entries: MenuEntry[] = [
     {
       label: "New subfolder",
@@ -970,7 +970,7 @@ function onFolderContext(event: MouseEvent, folder: AnnotatedBookmark): void {
   showContextMenu(event.clientX, event.clientY, entries);
 }
 
-function onBookmarkContext(event: MouseEvent, item: AnnotatedBookmark): void {
+function onBookmarkContext(event: MouseEvent, item: ManagedBookmark): void {
   showContextMenu(event.clientX, event.clientY, [
     {
       label: "Pin to top",
@@ -1017,13 +1017,6 @@ function faviconUrl(url?: string): string {
   } catch {
     return "icons/icon16.png";
   }
-}
-
-function escapeHtml(str: string): string {
-  if (!str) return "";
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
 }
 
 // ---------------------------------------------------------------------------
