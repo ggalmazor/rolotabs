@@ -41,6 +41,12 @@ Drag tabs between zones to organize them. All data is stored as regular Chrome b
 
 To update, download the new zip, replace the files in the same folder, and click the ↻ refresh icon on the Rolotabs card at `chrome://extensions/`.
 
+## Privacy & Security
+
+Rolotabs does not collect, transmit, or share any user data. All data stays on your device as regular Chrome bookmarks and local storage. No analytics, no tracking, no remote code.
+
+See the full [Privacy Policy](PRIVACY.md).
+
 ## License
 
 MIT
