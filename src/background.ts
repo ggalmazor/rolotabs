@@ -38,12 +38,12 @@ async function init(): Promise<void> {
   await notifySidePanel();
 }
 
+/** Discover the "Other Bookmarks" folder by position in Chrome's fixed tree structure.
+ *  Chrome always places it at index 1: [0] Bookmarks Bar, [1] Other Bookmarks, [2?] Mobile. */
 async function findOtherBookmarksFolder(): Promise<void> {
   const tree = await chrome.bookmarks.getTree();
-  const other = tree[0].children!.find(
-    (n) => n.title === "Other Bookmarks" || n.title === "Other bookmarks",
-  );
-  otherBookmarksFolderId = other?.id ?? tree[0].children![1]?.id ?? tree[0].children![0]?.id ?? "0";
+  const children = tree[0].children!;
+  otherBookmarksFolderId = children[1]?.id ?? children[0]?.id ?? "0";
 }
 
 // ---------------------------------------------------------------------------
