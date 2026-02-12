@@ -16,6 +16,7 @@ Rolotabs accesses the following Chrome APIs to function:
 - **Favicon** — to display website icons in the sidebar
 - **Storage** — to save local preferences (pinned order, collapsed folders, onboarding state)
 - **Side Panel** — to render the sidebar UI
+- **Offscreen** — to copy URLs to the clipboard via keyboard shortcut
 
 ## What Rolotabs does NOT do
 

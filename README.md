@@ -37,13 +37,18 @@ Drag tabs between zones to organize them. All data is stored as regular Chrome b
 
 > **Tip:** If the icon isn't visible, click the puzzle piece (Extensions menu) and pin Rolotabs.
 
-### Keyboard shortcut
+### Keyboard shortcuts
 
-Press **Alt+S** to toggle the side panel. To change the shortcut:
+| Shortcut | Action |
+|----------|--------|
+| **Alt+S** | Toggle the side panel |
+| **Alt+C** | Copy the current tab's URL to clipboard |
+
+To customize shortcuts:
 
 1. Go to `chrome://extensions/shortcuts`
 2. Find **Rolotabs**
-3. Click the pencil icon next to the shortcut
+3. Click the pencil icon next to any shortcut
 4. Press your preferred key combination
 
 ### Updating

@@ -7,6 +7,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.10.0] — 2026-02-12
+
+### Added
+- **Copy URL shortcut:** `Alt+C` copies the active tab's URL to the clipboard.
+  Customizable at `chrome://extensions/shortcuts`.
+- **New permissions:** `offscreen` for clipboard access, `scripting` removed.
+
+### Fixed
+- **Tab group duplication:** Service worker restarts no longer create duplicate
+  📌 Pinned and 📚 Bookmarks tab groups. Existing groups are recovered on
+  startup, and duplicates are automatically consolidated.
+
 ## [0.9.0] — 2026-02-12
 
 ### Added
