@@ -2,11 +2,11 @@
 
 ## Architecture
 
-- **`manifest.json`** — Manifest V3, Chrome 114+
+- **`extension/manifest.json`** — Manifest V3, Chrome 114+
 - **`src/background.ts`** — Service worker: bookmark↔tab mapping, tab grouping, state management
 - **`src/sidepanel.ts`** — Sidebar UI: three-zone rendering, drag-and-drop, context menus, edit-in-place
 - **`src/lib/`** — Pure, testable modules: types, URL matching, state building, context menus, drop indicators
-- **`sidepanel.html/css`** — Sidebar markup and styles (CSS custom properties, light/dark themes)
+- **`extension/sidepanel.html/css`** — Sidebar markup and styles (CSS custom properties, light/dark themes)
 
 Built with **Deno** (native TypeScript) + **esbuild** (~10ms builds). No frameworks.
 
@@ -15,13 +15,13 @@ Built with **Deno** (native TypeScript) + **esbuild** (~10ms builds). No framewo
 1. Install [Deno](https://deno.com/) (see `.tool-versions` for the expected version)
 2. Build: `deno task build`
 3. Open `chrome://extensions/`, enable **Developer mode**
-4. Click **Load unpacked** and select the project folder
+4. Click **Load unpacked** and select the `extension/` folder
 5. Click the Rolotabs icon to open the side panel
 
 ## Development
 
 ```sh
-deno task build    # Bundle to dist/
+deno task build    # Bundle to extension/dist/
 deno task dev      # Build in watch mode
 deno task test     # Run tests
 deno task fmt      # Format
@@ -43,20 +43,17 @@ After changes, reload the extension at `chrome://extensions/` and reopen the sid
 
 ## Versioning & releases
 
-- **Canonical version:** `manifest.json` → `"version"` field
+- **Canonical version:** `extension/manifest.json` → `"version"` field
 - **Changelog:** `CHANGELOG.md` (Keep a Changelog format)
-- Bump the version in `manifest.json` and update `CHANGELOG.md` in the same commit
+- Bump the version in `extension/manifest.json` and update `CHANGELOG.md` in the same commit
 - Use semver: patch for bugfixes, minor for features, major for breaking changes
 - Tag with `vX.Y.Z` and push — GitHub Actions builds and creates the release automatically
 
 ## File structure
 
 ```
-manifest.json          # Extension manifest
+build.ts               # esbuild script (TS → extension/dist/)
 deno.json              # Deno config: tasks, fmt, lint, compiler options
-build.ts               # esbuild script (TS → dist/)
-sidepanel.html         # Side panel markup
-sidepanel.css          # Styles (CSS custom properties, light/dark)
 src/
   background.ts        # Service worker (Chrome API glue)
   sidepanel.ts         # Side panel logic (rendering, events)
@@ -68,6 +65,12 @@ src/
     drop-indicator.ts  # Drag-and-drop ghost indicators
     reorder.ts         # Array reorder utility
 test/                  # Tests (deno test)
-dist/                  # Built JS for Chrome (gitignored)
-icons/                 # Extension icons (16, 32, 48, 128)
+extension/             # Everything Chrome loads
+  manifest.json        # Extension manifest
+  sidepanel.html       # Side panel markup
+  sidepanel.css        # Styles (CSS custom properties, light/dark)
+  offscreen.html       # Offscreen document for clipboard
+  icons/               # Extension icons (16, 32, 48, 128)
+  dist/                # Built JS (gitignored)
+chrome_extension/      # Design source assets (afdesign, promo templates, screenshots)
 ```

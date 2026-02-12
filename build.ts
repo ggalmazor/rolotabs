@@ -14,7 +14,7 @@ const commonOptions: esbuild.BuildOptions = {
   bundle: true,
   format: "iife" as const,
   target: "chrome114",
-  outdir: "dist",
+  outdir: "extension/dist",
   logLevel: "info",
 };
 

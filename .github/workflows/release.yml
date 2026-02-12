@@ -26,8 +26,8 @@ jobs:
 
       - name: Package extension
         run: |
-          zip -r rolotabs-${{ github.ref_name }}.zip \
-            manifest.json sidepanel.html sidepanel.css dist/ icons/*.png
+          cd extension && zip -r ../rolotabs-${{ github.ref_name }}.zip \
+            manifest.json sidepanel.html sidepanel.css offscreen.html dist/ icons/*.png
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
