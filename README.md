@@ -41,10 +41,6 @@ Drag tabs between zones to organize them. All data is stored as regular Chrome b
 
 To update, download the new zip, replace the files in the same folder, and click the ↻ refresh icon on the Rolotabs card at `chrome://extensions/`.
 
-## Credits
-
-Icon: [rolodex](https://thenounproject.com/browse/icons/term/rolodex/) by M2n from [Noun Project](https://thenounproject.com/browse/icons/term/rolodex/) (CC BY 3.0)
-
 ## License
 
 MIT
