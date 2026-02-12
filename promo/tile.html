@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 440px;
+    height: 280px;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  .tile {
+    width: 440px;
+    height: 280px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 36px;
+  }
+  .left {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+  .title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+  }
+  .tagline {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+  }
+  .zones {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .zone-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .icon {
+    width: 80px;
+    height: 80px;
+    filter: drop-shadow(0 4px 12px rgba(234, 147, 40, 0.4));
+  }
+  .sidebar-preview {
+    width: 90px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .preview-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .preview-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .preview-dot.orange { background: #ea9328; }
+  .preview-dot.blue { background: #3b82f6; }
+  .preview-dot.green { background: #22c55e; }
+  .preview-dot.dim { background: rgba(255,255,255,0.2); }
+  .preview-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.15);
+    flex: 1;
+  }
+  .preview-bar.active {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  .preview-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 2px 0;
+  }
+</style>
+</head>
+<body>
+<div class="tile">
+  <div class="left">
+    <div class="title">Rolotabs</div>
+    <div class="tagline">Your browsing rolodex.<br>Bookmarks that come alive as tabs.</div>
+    <div class="zones">
+      <span class="zone-badge">📌 Pin</span>
+      <span class="zone-badge">📚 Organize</span>
+      <span class="zone-badge">🔄 Drag</span>
+    </div>
+  </div>
+  <div class="right">
+    <img class="icon" src="../icons/icon128.png" alt="Rolotabs">
+    <div class="sidebar-preview">
+      <div class="preview-row">
+        <div class="preview-dot orange"></div>
+        <div class="preview-dot blue"></div>
+        <div class="preview-dot green"></div>
+        <div class="preview-dot dim"></div>
+      </div>
+      <div class="preview-divider"></div>
+      <div class="preview-row"><div class="preview-dot orange"></div><div class="preview-bar active"></div></div>
+      <div class="preview-row"><div class="preview-dot dim"></div><div class="preview-bar"></div></div>
+      <div class="preview-row"><div class="preview-dot blue"></div><div class="preview-bar"></div></div>
+      <div class="preview-divider"></div>
+      <div class="preview-row"><div class="preview-dot green"></div><div class="preview-bar active"></div></div>
+      <div class="preview-row"><div class="preview-dot green"></div><div class="preview-bar"></div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
