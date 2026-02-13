@@ -30,15 +30,21 @@ across devices automatically.
 
 ## Install
 
+Install Rolotabs from the [Chrome Web Store](https://chromewebstore.google.com/detail/rolotabs/TODO_REPLACE_WITH_ACTUAL_ID).
+
+> **Tip:** If the icon isn't visible after installing, click the puzzle piece (Extensions menu) and pin Rolotabs.
+
+<details>
+<summary>Manual install (developer mode)</summary>
+
 1. Go to the [latest release](https://github.com/ggalmazor/rolotabs/releases/latest)
 2. Download `rolotabs-v*.zip`
 3. Unzip the file somewhere permanent (don't delete the folder after loading)
 4. Open `chrome://extensions/` in Chrome
 5. Enable **Developer mode** (toggle in the top right)
 6. Click **Load unpacked** and select the unzipped folder
-7. Click the Rolotabs icon in the toolbar to open the side panel
 
-> **Tip:** If the icon isn't visible, click the puzzle piece (Extensions menu) and pin Rolotabs.
+</details>
 
 ### Keyboard shortcuts
 
@@ -56,8 +62,9 @@ To customize shortcuts:
 
 ### Updating
 
-To update, download the new zip, replace the files in the same folder, and click the ↻ refresh icon
-on the Rolotabs card at `chrome://extensions/`.
+Chrome Web Store installs update automatically. For manual installs, download the new zip, replace
+the files in the same folder, and click the ↻ refresh icon on the Rolotabs card at
+`chrome://extensions/`.
 
 ## Privacy & Security
 
