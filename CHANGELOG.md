@@ -7,6 +7,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning:
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.13.0] — 2026-02-13
+
+### Removed
+
+- **Copy URL shortcut:** Removed the `Alt+C` copy-URL feature. It didn't work when installed from
+  the Chrome Web Store due to offscreen document limitations.
+- **`offscreen` permission:** No longer needed without the clipboard feature.
+
 ## [0.12.0] — 2026-02-12
 
 ### Fixed
