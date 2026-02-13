@@ -7,6 +7,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning:
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.13.1] — 2026-02-13
+
+### Changed
+
+- **Release pipeline:** Replaced third-party Chrome Web Store action with direct API calls.
+
 ## [0.13.0] — 2026-02-13
 
 ### Removed
