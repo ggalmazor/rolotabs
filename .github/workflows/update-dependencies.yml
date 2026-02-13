@@ -1,0 +1,140 @@
+name: Update Dependencies
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Check for updates
+        id: outdated
+        run: |
+          # Capture outdated info before updating
+          deno outdated --json > /tmp/outdated-before.json 2>/dev/null || echo '[]' > /tmp/outdated-before.json
+          cat /tmp/outdated-before.json
+
+      - name: Update dependencies
+        run: deno outdated --update
+
+      - name: Build PR body and create PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Check if anything changed
+          if git diff --quiet deno.json deno.lock 2>/dev/null; then
+            echo "No dependency updates found"
+            exit 0
+          fi
+
+          BRANCH="deps/deno-update"
+          TITLE=""
+          BODY=""
+
+          # Parse changes from deno.json diff
+          CHANGES=""
+          SUMMARY=""
+          COUNT=0
+
+          while IFS= read -r line; do
+            # Match lines like -    "@std/assert": "jsr:@std/assert@^1.0.18",
+            if echo "$line" | grep -qE '^\-\s+"[^"]+": "(jsr|npm):'; then
+              PKG=$(echo "$line" | sed -E 's/.*"([^"]+)": "(jsr|npm):[^@]+@\^?([^"]+)".*/\1/')
+              REGISTRY=$(echo "$line" | sed -E 's/.*"[^"]+": "(jsr|npm):.*/\1/')
+              OLD_VER=$(echo "$line" | sed -E 's/.*@\^?([^"]+)".*/\1/')
+
+              # Find the corresponding new version
+              NEW_LINE=$(git diff deno.json | grep -E "^\+\s+\"${PKG}\":" | head -1)
+              NEW_VER=$(echo "$NEW_LINE" | sed -E 's/.*@\^?([^"]+)".*/\1/')
+
+              if [ -n "$NEW_VER" ] && [ "$OLD_VER" != "$NEW_VER" ]; then
+                COUNT=$((COUNT + 1))
+
+                # Build package URL
+                if [ "$REGISTRY" = "jsr" ]; then
+                  SCOPE=$(echo "$line" | sed -E 's/.*"([^"]+)": "jsr:.*/\1/')
+                  PKG_URL="https://jsr.io/${SCOPE}"
+                  CHANGELOG_URL="${PKG_URL}/versions"
+                else
+                  PKG_NAME=$(echo "$line" | sed -E 's/.*"[^"]+": "npm:([^@]+)@.*/\1/')
+                  PKG_URL="https://www.npmjs.com/package/${PKG_NAME}"
+                  CHANGELOG_URL="https://github.com/search?q=${PKG_NAME}+changelog&type=repositories"
+                fi
+
+                CHANGES="${CHANGES}
+          ### [\`${PKG}\`](${PKG_URL})
+
+          | | |
+          |---|---|
+          | Package | \`${PKG}\` |
+          | Update | \`${OLD_VER}\` → \`${NEW_VER}\` |
+          | Registry | ${REGISTRY} |
+          | Versions | [changelog](${CHANGELOG_URL}) |
+          "
+                if [ -n "$SUMMARY" ]; then
+                  SUMMARY="${SUMMARY}, "
+                fi
+                SUMMARY="${SUMMARY}\`${PKG}\` ${OLD_VER} → ${NEW_VER}"
+              fi
+            fi
+          done < <(git diff deno.json)
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "Could not parse changes"
+            exit 0
+          fi
+
+          # Build title
+          if [ "$COUNT" -eq 1 ]; then
+            PKG_NAME=$(echo "$SUMMARY" | sed -E 's/`([^`]+)`.*/\1/')
+            VERSIONS=$(echo "$SUMMARY" | sed -E 's/`[^`]+` //')
+            TITLE="deps: bump ${PKG_NAME} from ${VERSIONS}"
+          else
+            TITLE="deps: bump ${COUNT} deno dependencies"
+          fi
+
+          # Build body
+          BODY="Bumps deno dependencies to their latest compatible versions.
+
+          ## Updated dependencies
+          ${CHANGES}
+          ---
+
+          *This PR was automatically created by the [Update Dependencies](../actions/workflows/update-dependencies.yml) workflow.*
+          *Dependency updates are checked daily.*"
+
+          # Remove leading whitespace from heredoc-style indentation
+          BODY=$(echo "$BODY" | sed 's/^          //')
+
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Create or update branch
+          git checkout -B "$BRANCH"
+          git add deno.json deno.lock
+          git commit -m "$TITLE"
+          git push -f origin "$BRANCH"
+
+          # Create or update PR
+          EXISTING_PR=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null)
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr edit "$EXISTING_PR" --title "$TITLE" --body "$BODY"
+            echo "Updated existing PR #${EXISTING_PR}"
+          else
+            gh label create dependencies --color 0075ca --description "Pull requests that update a dependency" 2>/dev/null || true
+            gh pr create --title "$TITLE" --body "$BODY" --label dependencies
+            echo "Created new PR"
+          fi
