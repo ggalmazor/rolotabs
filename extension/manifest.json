@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Rolotabs",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "description": "Your browsing rolodex — bookmarks that come alive as tabs",
   "permissions": [
     "bookmarks",

@@ -7,6 +7,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning:
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.13.2] — 2026-02-13
+
+### Changed
+
+- **Release pipeline:** Added manual trigger for the release workflow.
+
 ## [0.13.1] — 2026-02-13
 
 ### Changed
