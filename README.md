@@ -30,9 +30,11 @@ across devices automatically.
 
 ## Install
 
-Install Rolotabs from the [Chrome Web Store](https://chromewebstore.google.com/detail/rolotabs/TODO_REPLACE_WITH_ACTUAL_ID).
+Install Rolotabs from the
+[Chrome Web Store](https://chromewebstore.google.com/detail/rolotabs/ilmppkakeeanjkhbiapoknnliimihifa).
 
-> **Tip:** If the icon isn't visible after installing, click the puzzle piece (Extensions menu) and pin Rolotabs.
+> **Tip:** If the icon isn't visible after installing, click the puzzle piece (Extensions menu) and
+> pin Rolotabs.
 
 <details>
 <summary>Manual install (developer mode)</summary>
@@ -48,10 +50,9 @@ Install Rolotabs from the [Chrome Web Store](https://chromewebstore.google.com/d
 
 ### Keyboard shortcuts
 
-| Shortcut  | Action                                  |
-| --------- | --------------------------------------- |
-| **Alt+S** | Toggle the side panel                   |
-| **Alt+C** | Copy the current tab's URL to clipboard |
+| Shortcut  | Action                |
+| --------- | --------------------- |
+| **Alt+S** | Toggle the side panel |
 
 To customize shortcuts:
 

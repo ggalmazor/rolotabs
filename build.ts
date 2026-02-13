@@ -21,7 +21,6 @@ const commonOptions: esbuild.BuildOptions = {
 const entryPoints = [
   { in: "src/background.ts", out: "background" },
   { in: "src/sidepanel.ts", out: "sidepanel" },
-  { in: "src/offscreen.ts", out: "offscreen" },
 ];
 
 async function build() {

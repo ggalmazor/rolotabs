@@ -10,17 +10,17 @@ The canonical version lives in `manifest.json` (`"version"`).
 ## [0.12.0] — 2026-02-12
 
 ### Fixed
-- **Zone 2 empty on first load:** Bookmarks in "Other Bookmarks" were not
-  showing because the index only annotated Bookmarks Bar's children. Now
-  all top-level folders are indexed and zone 2 correctly filters to the
-  root folder.
-- **Root folder discovery:** Removed hardcoded `"2"` as Other Bookmarks ID.
-  Uses positional lookup in Chrome's bookmark tree, which works regardless
-  of browser language.
+
+- **Zone 2 empty on first load:** Bookmarks in "Other Bookmarks" were not showing because the index
+  only annotated Bookmarks Bar's children. Now all top-level folders are indexed and zone 2
+  correctly filters to the root folder.
+- **Root folder discovery:** Removed hardcoded `"2"` as Other Bookmarks ID. Uses positional lookup
+  in Chrome's bookmark tree, which works regardless of browser language.
 
 ### Changed
-- **Sidepanel split:** Extracted context menus, drop zones, edit-in-place,
-  toast, and favicon logic into `src/ui/` modules (1090 → 589 lines).
+
+- **Sidepanel split:** Extracted context menus, drop zones, edit-in-place, toast, and favicon logic
+  into `src/ui/` modules (1090 → 589 lines).
 
 ## [0.11.0] — 2026-02-12
 

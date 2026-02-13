@@ -198,25 +198,6 @@ chrome.bookmarks.onChanged.addListener(async (id, changeInfo) => {
 
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-// Keyboard command handlers
-chrome.commands.onCommand.addListener(async (command) => {
-  if (command === "copy-url") {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.url) {
-      try {
-        await chrome.offscreen.createDocument({
-          url: "offscreen.html",
-          reasons: ["CLIPBOARD" as chrome.offscreen.Reason],
-          justification: "Copy URL to clipboard",
-        });
-      } catch {
-        // Document may already exist
-      }
-      await chrome.runtime.sendMessage({ type: "clipboard-write", text: tab.url });
-    }
-  }
-});
-
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   handleMessage(message).then(sendResponse).catch((err) => {
     console.error("handleMessage error:", err);
