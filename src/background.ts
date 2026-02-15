@@ -4,7 +4,6 @@
 // Slim orchestrator: wires Chrome events to the BookmarkIndex and Grouping modules.
 
 import { BookmarkIndex } from "./lib/bookmark-index.ts";
-import { addTabToGroup, recoverGroupIds, ungroupIfNotManaged, ungroupTab } from "./lib/grouping.ts";
 import type { BookmarkNode, TabInfo } from "./lib/types.ts";
 
 // ---------------------------------------------------------------------------
@@ -34,7 +33,6 @@ async function init(): Promise<void> {
     otherBookmarksFolderId,
   );
 
-  await recoverGroupIds();
   await notifySidePanel();
 }
 
@@ -93,18 +91,6 @@ chrome.tabs.onCreated.addListener(async (tab) => {
         favIconUrl: tab.favIconUrl,
       });
     }
-  }
-  // Ungroup tabs that inherited a managed group but aren't bookmarked
-  if (tab.id) {
-    const tabId = tab.id;
-    setTimeout(async () => {
-      try {
-        const isBookmarked = index.isTabAssociated(tabId);
-        await ungroupIfNotManaged(tabId, isBookmarked);
-      } catch {
-        // tab may have been closed
-      }
-    }, 500);
   }
   await notifySidePanel();
 });
@@ -231,7 +217,6 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
           title: newTab.title,
           favIconUrl: newTab.favIconUrl,
         });
-        await addTabToGroup(newTab.id!, bm.isPinned ? "pinned" : "bookmarked");
       }
       return await getState();
     }
@@ -266,7 +251,6 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       await savePinnedIds();
       await chrome.bookmarks.move(bookmarkId, { parentId: otherBookmarksFolderId });
       const tabId = index.getTabId(bookmarkId);
-      if (tabId !== null) await addTabToGroup(tabId, "pinned");
       return await getState();
     }
 
@@ -275,7 +259,6 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       index.unpin(bookmarkId);
       await savePinnedIds();
       const tabId = index.getTabId(bookmarkId);
-      if (tabId !== null) await addTabToGroup(tabId, "bookmarked");
       return await getState();
     }
 
@@ -312,7 +295,6 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
         index.pin(bm.id);
         await savePinnedIds();
       }
-      await addTabToGroup(tabId, message.pinned ? "pinned" : "bookmarked");
       return await getState();
     }
 
@@ -344,7 +326,6 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       const tabId = index.getTabId(bookmarkId);
       index.removeBookmark(bookmarkId);
       if (tabId !== null) {
-        await ungroupTab(tabId);
       }
       await savePinnedIds();
       await chrome.bookmarks.remove(bookmarkId);
