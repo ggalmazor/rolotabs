@@ -7,6 +7,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning:
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.14.0] — 2026-02-15
+
+### Removed
+
+- **Tab groups:** Removed Chrome tab group management (📌 Pinned / 📚 Bookmarks). Tabs now open
+  ungrouped like normal browser tabs.
+- **`tabGroups` permission:** No longer needed.
+
 ## [0.13.2] — 2026-02-13
 
 ### Changed
