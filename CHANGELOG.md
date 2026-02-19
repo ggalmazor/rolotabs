@@ -7,6 +7,32 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning:
 
 The canonical version lives in `manifest.json` (`"version"`).
 
+## [0.15.0] — 2026-02-19
+
+### Fixed
+
+- **Folder rename not persisting:** The inline editor committed the new name but the UI reverted to
+  the old title until some unrelated event triggered a full rebuild. `chrome.bookmarks.update()` was
+  not being awaited before `refreshState()` was called, so `getState()` raced against the write and
+  returned the stale title from the index. All rename callbacks now await the bookmarks API before
+  refreshing.
+- **Bookmark title stale in index:** `BookmarkIndex` had no path to update a title in-place.
+  `chrome.bookmarks.onChanged` only propagated URL changes; title-only updates (renames) were
+  silently dropped. Added `updateBookmarkTitle()` to the index and wired it into the `onChanged`
+  listener so the index stays current without waiting for a full rebuild.
+- **Items couldn't be reordered within a folder:** Drops inside a folder's children container
+  bubbled up to the outer bookmarks-list drop handler, which always used `rootFolderId` as
+  `parentId` — moving the dragged item to the root instead of keeping it in the folder. Each
+  `.folder-children` div now has its own drop zone (`setupFolderChildrenDropZone`) that stops
+  propagation and passes the correct folder ID.
+- **Folder drop zone flickered and blocked adjacent folders:** `showFolderDropGhost` was inserting
+  the ghost element into `.folder-children` (outside the folder header). The pointer immediately
+  left the header, firing `dragleave`, which removed the ghost — then `dragover` re-added it,
+  looping at frame rate. The ghost-insertion path is removed; both collapsed and expanded folders
+  now simply apply the `.drop-target` CSS class to the header, which is stable for the duration of
+  the drag. The `dragleave` guard was also widened to check the outer `.folder-item` container
+  rather than the header alone, so moving into child elements no longer triggers a premature hide.
+
 ## [0.14.0] — 2026-02-15
 
 ### Removed
