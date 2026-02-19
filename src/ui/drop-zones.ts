@@ -191,6 +191,56 @@ export function setupOpenTabReorderDropZone(list: HTMLElement): void {
   });
 }
 
+/**
+ * Set up a drop zone on a folder's children container so items can be
+ * reordered within the folder. Stops propagation so the outer bookmarks
+ * list drop zone doesn't steal the event.
+ */
+export function setupFolderChildrenDropZone(element: HTMLElement, folderId: string): void {
+  if (element.dataset.dropZone) return;
+  element.dataset.dropZone = "true";
+
+  element.addEventListener("dragover", (e) => {
+    const raw = e.dataTransfer!.types.includes("application/rolotabs");
+    if (!raw) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer!.dropEffect = "move";
+    pendingDropIndex = showDropIndicator(element, e.clientY);
+  });
+
+  element.addEventListener("dragleave", (e) => {
+    const related = e.relatedTarget as Node | null;
+    // Only hide if leaving the container entirely (not moving into the ghost or a child)
+    if (!element.contains(related)) {
+      hideDropIndicator();
+    }
+  });
+
+  element.addEventListener("drop", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    hideDropIndicator();
+
+    const raw = e.dataTransfer!.getData("application/rolotabs");
+    if (!raw) return;
+    const data = JSON.parse(raw);
+
+    if (data.type === "openTab") {
+      await delegate.sendMessage({ type: "promoteTab", tabId: data.tabId, parentId: folderId });
+    } else if (data.type === "bookmark") {
+      await delegate.sendMessage({
+        type: "reorderBookmark",
+        bookmarkId: data.bookmarkId,
+        parentId: folderId,
+        index: pendingDropIndex,
+      });
+    }
+
+    await delegate.refreshState();
+  });
+}
+
 export async function handleDropOnFolder(e: DragEvent, folderId: string): Promise<void> {
   hideDropIndicator();
   const raw = e.dataTransfer!.getData("application/rolotabs");
