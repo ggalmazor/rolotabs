@@ -110,29 +110,15 @@ export function showGridDropIndicator(
 
 /**
  * Show a ghost in a folder header area (drop into folder).
+ * Always highlights the folder header with a CSS class to avoid
+ * inserting the ghost outside the header element, which would cause
+ * spurious dragleave events and flicker.
  */
-export function showFolderDropGhost(folderHeader: HTMLElement, label?: string): void {
-  const parent = folderHeader.parentElement!;
-  const childrenEl = parent.querySelector(".folder-children");
-  const isCollapsed = childrenEl?.classList.contains("collapsed");
-
-  if (isCollapsed) {
-    // Highlight the folder header itself when collapsed
-    detachGhost();
-    folderHeader.classList.add("drop-target");
-  } else {
-    const g = getGhost();
-    detachGhost();
-    g.textContent = label || "";
-    g.className = "drop-ghost drop-ghost-folder";
-    g.style.display = "";
-
-    if (childrenEl) {
-      childrenEl.insertBefore(g, childrenEl.firstChild);
-    } else {
-      parent.appendChild(g);
-    }
-  }
+export function showFolderDropGhost(folderHeader: HTMLElement, _label?: string): void {
+  detachGhost();
+  // Clear any previous folder highlight before setting the new one
+  document.querySelectorAll(".drop-target").forEach((el) => el.classList.remove("drop-target"));
+  folderHeader.classList.add("drop-target");
 }
 
 /**
