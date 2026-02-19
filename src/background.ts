@@ -175,6 +175,9 @@ chrome.bookmarks.onChanged.addListener(async (id, changeInfo) => {
     const tabs = await queryTabs();
     index.updateBookmarkUrl(id, changeInfo.url, tabs);
   }
+  if (changeInfo.title) {
+    index.updateBookmarkTitle(id, changeInfo.title);
+  }
   await notifySidePanel();
 });
 

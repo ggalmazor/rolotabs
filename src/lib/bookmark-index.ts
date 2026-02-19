@@ -415,6 +415,12 @@ export class BookmarkIndex {
     this.byId.delete(bookmarkId);
   }
 
+  updateBookmarkTitle(bookmarkId: string, newTitle: string): void {
+    const bm = this.byId.get(bookmarkId);
+    if (!bm) return;
+    bm.title = newTitle;
+  }
+
   updateBookmarkUrl(bookmarkId: string, newUrl: string, tabs: TabInfo[]): void {
     const bm = this.byId.get(bookmarkId);
     if (!bm) return;

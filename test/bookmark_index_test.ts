@@ -479,6 +479,35 @@ describe("BookmarkIndex", () => {
     });
   });
 
+  describe("updateBookmarkTitle", () => {
+    it("updates the title on a bookmark", () => {
+      const tree = makeTree(bm("bm1", "https://a.com", { title: "Old Title" }));
+      index.rebuild(tree, [], [], "2");
+
+      index.updateBookmarkTitle("bm1", "New Title");
+
+      assertEquals(index.get("bm1")!.title, "New Title");
+    });
+
+    it("updates the title on a folder", () => {
+      const tree = makeTree(folder("f1", "Old Folder", []));
+      index.rebuild(tree, [], [], "2");
+
+      index.updateBookmarkTitle("f1", "Renamed Folder");
+
+      assertEquals(index.get("f1")!.title, "Renamed Folder");
+    });
+
+    it("does nothing for an unknown ID", () => {
+      const tree = makeTree(bm("bm1", "https://a.com", { title: "Kept" }));
+      index.rebuild(tree, [], [], "2");
+
+      index.updateBookmarkTitle("nonexistent", "Should not matter");
+
+      assertEquals(index.get("bm1")!.title, "Kept");
+    });
+  });
+
   // -------------------------------------------------------------------------
   // Lookups
   // -------------------------------------------------------------------------
