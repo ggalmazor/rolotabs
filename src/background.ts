@@ -253,7 +253,6 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       index.pin(bookmarkId);
       await savePinnedIds();
       await chrome.bookmarks.move(bookmarkId, { parentId: otherBookmarksFolderId });
-      const tabId = index.getTabId(bookmarkId);
       return await getState();
     }
 
@@ -261,7 +260,6 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
       const bookmarkId = message.bookmarkId as string;
       index.unpin(bookmarkId);
       await savePinnedIds();
-      const tabId = index.getTabId(bookmarkId);
       return await getState();
     }
 
@@ -326,10 +324,7 @@ async function handleMessage(message: { type: string; [key: string]: unknown }):
 
     case "unbookmarkTab": {
       const bookmarkId = message.bookmarkId as string;
-      const tabId = index.getTabId(bookmarkId);
       index.removeBookmark(bookmarkId);
-      if (tabId !== null) {
-      }
       await savePinnedIds();
       await chrome.bookmarks.remove(bookmarkId);
       return await getState();
