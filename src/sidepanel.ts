@@ -14,6 +14,7 @@ import {
   handleDropOnFolder,
   initDropZones,
   setupDropZone,
+  setupFolderChildrenDropZone,
   setupOpenTabReorderDropZone,
   setupUnbookmarkDropZone,
 } from "./ui/drop-zones.ts";
@@ -335,8 +336,8 @@ function renderFolder(folder: ManagedBookmark): HTMLElement {
   header.addEventListener("click", () => toggleFolder(folder.id));
   name.addEventListener("dblclick", (e) => {
     e.stopPropagation();
-    editInPlace(name, folder.title, (newTitle) => {
-      chrome.bookmarks.update(folder.id, { title: newTitle });
+    editInPlace(name, folder.title, async (newTitle) => {
+      await chrome.bookmarks.update(folder.id, { title: newTitle });
       refreshState();
     });
   });
@@ -344,8 +345,8 @@ function renderFolder(folder: ManagedBookmark): HTMLElement {
   if (editAfterRenderId === folder.id) {
     editAfterRenderId = null;
     requestAnimationFrame(() => {
-      editInPlace(name, folder.title, (newTitle) => {
-        chrome.bookmarks.update(folder.id, { title: newTitle });
+      editInPlace(name, folder.title, async (newTitle) => {
+        await chrome.bookmarks.update(folder.id, { title: newTitle });
         refreshState();
       });
     });
@@ -374,7 +375,9 @@ function renderFolder(folder: ManagedBookmark): HTMLElement {
     showFolderDropGhost(header);
   });
   header.addEventListener("dragleave", (e) => {
-    if (!header.contains(e.relatedTarget as Node)) {
+    // Use the container so that moving into child elements doesn't
+    // trigger a premature hide (avoids flicker on folder headers).
+    if (!container.contains(e.relatedTarget as Node)) {
       hideDropIndicator();
     }
   });
@@ -406,6 +409,7 @@ function renderFolder(folder: ManagedBookmark): HTMLElement {
     }
   }
 
+  setupFolderChildrenDropZone(children, folder.id);
   container.appendChild(children);
 
   if (isCollapsed) {

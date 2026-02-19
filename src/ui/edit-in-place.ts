@@ -2,7 +2,7 @@
 export function editInPlace(
   el: HTMLElement,
   currentValue: string,
-  onSave: (newValue: string) => void,
+  onSave: (newValue: string) => Promise<void> | void,
 ): void {
   const input = document.createElement("input");
   input.type = "text";

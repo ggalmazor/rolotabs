@@ -74,8 +74,8 @@ export function onFolderContext(event: MouseEvent, folder: ManagedBookmark): voi
           `.folder-item[data-folder-id="${folder.id}"] .folder-name`,
         ) as HTMLElement;
         if (nameEl) {
-          editInPlace(nameEl, folder.title, (newTitle) => {
-            chrome.bookmarks.update(folder.id, { title: newTitle });
+          editInPlace(nameEl, folder.title, async (newTitle) => {
+            await chrome.bookmarks.update(folder.id, { title: newTitle });
             delegate.refreshState();
           });
         }
@@ -128,8 +128,8 @@ export function onBookmarkContext(event: MouseEvent, item: ManagedBookmark): voi
           `.tab-item[data-bookmark-id="${item.id}"] .tab-title`,
         ) as HTMLElement;
         if (titleEl) {
-          editInPlace(titleEl, item.title, (newTitle) => {
-            chrome.bookmarks.update(item.id, { title: newTitle });
+          editInPlace(titleEl, item.title, async (newTitle) => {
+            await chrome.bookmarks.update(item.id, { title: newTitle });
             delegate.refreshState();
           });
         }
